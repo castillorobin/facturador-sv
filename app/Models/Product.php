@@ -4,18 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Customer extends Model
+class Product extends Model
 {
     use Multitenant; // <--- Aquí activas la magia
-
     protected $fillable = [
-        'company_id', 'nombre', 'nit', 'nrc', 'num_documento', 'direccion', 'telefono', 'email'
+        'company_id', 'nombre', 'descripcion', 'precio', 'codigo'
     ];
+
+    
 
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
-
-
 }

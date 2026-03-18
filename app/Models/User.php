@@ -12,6 +12,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+    use Multitenant;
 
     /**
      * The attributes that are mass assignable.
@@ -45,5 +46,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }
