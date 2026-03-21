@@ -7,6 +7,15 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @if ($errors->any())
+    <div class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+        <ul class="list-disc ml-5">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
             <form action="{{ route('dtes.store') }}" method="POST" id="dte-form">
                 @csrf
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -145,30 +154,29 @@
         function addItem(id, nombre, precio, exento) {
             const rowId = Date.now(); // ID único para la fila
             const row = `
-                <tr id="row-${rowId}" class="item-row" data-exento="${exento}">
-                    <td class="p-2 border">
-                        <input type="number" name="items[${id}][cantidad]" value="1" min="1" 
-                               class="w-20 text-center border-gray-300 rounded qty-input" 
-                               onchange="calculateTotals()">
-                    </td>
-                    <td class="p-2 border text-left">
-                        <span class="font-medium">${nombre}</span>
-                        <input type="hidden" name="items[${id}][product_id]" value="${id}">
-                    </td>
-                    <td class="p-2 border font-mono">
-                        $${precio.toFixed(2)}
-                        <input type="hidden" class="price-input" value="${precio}">
-                    </td>
-                    <td class="p-2 border font-bold text-gray-700 subtotal-column">
-                        $${precio.toFixed(2)}
-                    </td>
-                    <td class="p-2 border">
-                        <button type="button" onclick="removeRow(${rowId})" class="text-red-500 hover:text-red-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </td>
-                </tr>
-            `;
+    <tr id="row-${rowId}" class="item-row" data-exento="${exento}">
+        <td class="p-2 border">
+            <input type="number" name="items[${id}][cantidad]" value="1" min="1" 
+                   class="w-20 text-center border-gray-300 rounded qty-input" 
+                   onchange="calculateTotals()">
+        </td>
+        <td class="p-2 border text-left">
+            <span class="font-medium">${nombre}</span>
+            <input type="hidden" name="items[${id}][product_id]" value="${id}">
+        </td>
+        <td class="p-2 border font-mono">
+            $${precio.toFixed(2)}
+            <input type="hidden" name="items[${id}][precio_unitario]" class="price-input" value="${precio}">
+        </td>
+        <td class="p-2 border font-bold text-gray-700 subtotal-column">
+            $${precio.toFixed(2)}
+        </td>
+        <td class="p-2 border">
+            <button type="button" onclick="removeRow(${rowId})" class="text-red-500 hover:text-red-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+        </td>
+    </tr>`;
             
             $('#items-table tbody').append(row);
             calculateTotals();
@@ -216,6 +224,17 @@
             $('#lbl-iva').text('$' + totalIva.toFixed(2));
             $('#lbl-total').text('$' + granTotal.toFixed(2));
         };
+
+        $('#dte-form').on('submit', function(e) {
+    console.log("Intentando enviar formulario...");
+    const itemCount = $('.item-row').length;
+    
+    if (itemCount === 0) {
+        e.preventDefault();
+        alert('Debes agregar al menos un producto a la factura.');
+        return false;
+    }
+});
     });
 </script>
 @endpush

@@ -24,6 +24,9 @@
                     <x-nav-link :href="route('dtes.create')" :active="request()->routeIs('dtes.create')">
                         {{ __('Emitir DTE') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('dtes.index')" :active="request()->routeIs('dtes.*')">
+                        {{ __('Administrar DTE') }}
+                    </x-nav-link>
                 </div>
             </div>
 

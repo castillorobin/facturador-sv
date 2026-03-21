@@ -14,6 +14,15 @@ use Carbon\Carbon;
 
 class DteController extends Controller
 {
+    public function index()
+    {
+        // Cargamos los DTEs con su cliente para evitar múltiples consultas (Eager Loading)
+        $dtes = Dte::with('customer')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+        return view('dtes.index', compact('dtes'));
+    }
     public function create()
     {
         $customers = Customer::orderBy('nombre')->get();

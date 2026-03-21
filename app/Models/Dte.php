@@ -22,4 +22,8 @@ class Dte extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+    protected $casts = [
+    'fecha_emision' => 'datetime',
+];
 }
