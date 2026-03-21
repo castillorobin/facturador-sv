@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\DteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,6 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/company/setup', [CompanyController::class, 'update'])->name('company.update');
     // Rutas para gestión de clientes
     Route::resource('customers', CustomerController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource('dtes', DteController::class);
 });
 
 require __DIR__.'/auth.php';

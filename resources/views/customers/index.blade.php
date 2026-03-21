@@ -20,62 +20,74 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre / Razón Social</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NRC</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($customers as $customer)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $customer->nombre }}</div>
-                                            <div class="text-sm text-gray-500">{{ $customer->email }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span class="font-bold text-gray-700">
-                                                {{ $customer->tipo_documento == '36' ? 'NIT' : ($customer->tipo_documento == '13' ? 'DUI' : 'Otro') }}:
-                                            </span> 
-                                            {{ $customer->num_documento }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $customer->nrc ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($customer->nrc)
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                    Contribuyente (CCF)
-                                                </span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    Consumidor Final
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('customers.edit', $customer) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
-                                            <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('¿Eliminar cliente?')">Borrar</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                            No hay clientes registrados aún.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="overflow-x-auto shadow-lg sm:rounded-lg border border-gray-200">
+    <table class="w-full text-sm text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-300">
+            <tr>
+                <th scope="col" class="px-6 py-4 text-center">Cliente / Razón Social</th>
+                <th scope="col" class="px-6 py-4 text-center">Documento</th>
+                <th scope="col" class="px-6 py-4 text-center">Estado Fiscal</th>
+                <th scope="col" class="px-6 py-4 text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+    @forelse($customers as $customer)
+        <tr class="bg-white hover:bg-indigo-50 odd:bg-white even:bg-gray-50 transition-colors duration-200">
+            
+            <td class="px-6 py-4 text-center font-medium text-gray-900">
+                <div class="flex flex-col items-center justify-center">
+                    <span class="font-bold">{{ $customer->nombre }}</span>
+                    <span class="text-xs text-gray-400 font-normal">{{ $customer->email ?? 'Sin correo' }}</span>
+                </div>
+            </td>
+            
+            <td class="px-6 py-4">
+                <div class="flex items-center justify-center space-x-2">
+                    <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">
+                        {{ $customer->tipo_documento == '36' ? 'NIT' : 'DUI' }}
+                    </span>
+                    <span class="text-gray-600">{{ $customer->num_documento }}</span>
+                </div>
+            </td>
+
+            <td class="px-6 py-4">
+                <div class="flex items-center justify-center">
+                    @if($customer->nrc)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                            <svg class="w-2 h-2 mr-1.5 fill-current text-purple-500" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"></circle></svg>
+                            Contribuyente
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            <svg class="w-2 h-2 mr-1.5 fill-current text-blue-500" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"></circle></svg>
+                            Consumidor Final
+                        </span>
+                    @endif
+                </div>
+            </td>
+
+            <td class="px-6 py-4 text-center">
+                <div class="flex justify-center items-center space-x-4">
+                    <a href="{{ route('customers.edit', $customer) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold flex items-center transition-transform hover:scale-105">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Editar
+                    </a>
+                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900 font-semibold flex items-center transition-transform hover:scale-105" onclick="return confirm('¿Eliminar cliente?')">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Borrar
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+    @empty
+        ...
+    @endforelse
+</tbody>
+    </table>
+</div>
                 </div>
             </div>
         </div>

@@ -6,7 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        <img src="{{ asset('img/logosis.png') }}" alt="FacturacionSV" class="h-6 w-auto " >
                     </a>
                 </div>
 
@@ -17,6 +17,12 @@
                     </x-nav-link>
                     <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
                         {{ __('Clientes') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                        {{ __('Productos/Servicios') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('dtes.create')" :active="request()->routeIs('dtes.create')">
+                        {{ __('Emitir DTE') }}
                     </x-nav-link>
                 </div>
             </div>
