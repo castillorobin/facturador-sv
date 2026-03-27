@@ -175,4 +175,147 @@ class DteService
         return $letras . ' DOLARES CON ' . str_pad($centavos, 2, '0', STR_PAD_LEFT) . '/100';
     }
 
+    public function generarEstructura03(Dte $dte)
+{
+    $dte->load(['customer', 'items', 'company']);
+    
+    $cuerpoDocumento = $this->mapearItemsCCF($dte->items);
+    
+    $totalGravada = 0;
+    foreach ($cuerpoDocumento as $item) {
+        $totalGravada += $item['ventaGravada'];
+    }
+
+    $totalGravada = round($totalGravada, 2);
+    $totalIVA = round($totalGravada * 0.13, 2);
+    $totalPagar = round($totalGravada + $totalIVA, 2);
+
+    return [
+        "identificacion" => [
+            "version" => 3,
+            "ambiente" => "00",
+            "tipoDte" => "03",
+            "numeroControl" => $dte->numero_control,
+            "codigoGeneracion" => $dte->codigo_generacion,
+            "tipoModelo" => 1,
+            "tipoOperacion" => 1,
+            "fecEmi" => $dte->fecha_emision->format('Y-m-d'),
+            "horEmi" => $dte->fecha_emision->format('H:i:s'),
+            "tipoMoneda" => "USD",
+            "tipoContingencia" => null, // REQUERIDO
+            "motivoContin" => null      // REQUERIDO
+        ],
+        "documentoRelacionado" => null, // REQUERIDO
+        "emisor" => [
+            "nit" => $dte->company->nit,
+            "nrc" => $dte->company->nrc,
+            "nombre" => $dte->company->nombre,
+            "codActividad" => "96092",
+            "descActividad" => "Servicios n.c.p.",
+            "nombreComercial" => $dte->company->nombre_comercial,
+            "tipoEstablecimiento" => "02",
+            "direccion" => [
+                "departamento" => "02",
+                "municipio" => "01",
+                "complemento" => $dte->company->direccion
+            ],
+            "telefono" => $dte->company->telefono,
+            "correo" => $dte->company->email,
+            "codEstableMH" => null,    // REQUERIDO
+            "codEstable" => null,      // REQUERIDO
+            "codPuntoVentaMH" => null, // REQUERIDO
+            "codPuntoVenta" => null    // REQUERIDO
+        ],
+        "receptor" => [
+            "nit" => str_replace('-', '', $dte->customer->num_documento), // Limpiar guiones
+            "nrc" => str_replace('-', '', $dte->customer->nrc), // Limpiar guiones
+            "nombre" => $dte->customer->nombre,
+            "nombreComercial" => $dte->customer->nombre_comercial ?? $dte->customer->nombre,
+            "codActividad" => "41001",
+            "descActividad" => "Otros",
+            "direccion" => [
+                "departamento" => "02",
+                "municipio" => "15",
+                "complemento" => $dte->customer->direccion
+            ],
+            "telefono" => $dte->customer->telefono,
+            "correo" => $dte->customer->email,
+        ],
+        "otrosDocumentos" => null, // REQUERIDO
+        "ventaTercero" => null,    // REQUERIDO
+        "cuerpoDocumento" => $cuerpoDocumento,
+        "resumen" => [
+            "totalNoSuj" => 0.0,
+            "totalExenta" => 0.0,
+            "totalGravada" => $totalGravada,
+            "subTotalVentas" => $totalGravada,
+            "descuNoSuj" => 0.0,
+            "descuExenta" => 0.0,
+            "descuGravada" => 0.0,
+            "porcentajeDescuento" => 0.0,
+            "totalDescu" => 0.0,
+            "subTotal" => $totalGravada,
+            "ivaRete1" => 0.0,
+            "ivaPerci1" => 0.0,
+            "reteRenta" => 0.0,
+            "montoTotalOperacion" => $totalPagar,
+            "totalNoGravado" => 0.0,
+            "totalPagar" => $totalPagar,
+            "totalLetras" => $this->numeroALetras($totalPagar),
+            "saldoFavor" => 0.0,       // REQUERIDO
+            "condicionOperacion" => 1,
+            "pagos" => [               // REQUERIDO
+                [
+                    "codigo" => "01",
+                    "montoPago" => $totalPagar,
+                    "referencia" => null,
+                    "plazo" => null,
+                    "periodo" => null
+                ]
+            ],
+            "numPagoElectronico" => null, // REQUERIDO
+            "tributos" => [
+                [
+                    "codigo" => "20",
+                    "descripcion" => "IVA",
+                    "valor" => $totalIVA
+                ]
+            ]
+        ],
+        "extension" => null, // REQUERIDO
+        "apendice" => null   // REQUERIDO
+    ];
+}
+
+private function mapearItemsCCF($items)
+{
+    return $items->map(function ($item, $key) {
+        $precioConIVA = (float)$item->precio_unitario;
+        $cantidad = (float)$item->cantidad;
+        
+        $baseSinIVA = round($precioConIVA / 1.13, 2);
+        $ventaGravada = round($baseSinIVA * $cantidad, 2);
+
+        return [
+            "numItem" => $key + 1,
+            "tipoItem" => 1,
+            "numeroDocumento" => null,
+            "cantidad" => $cantidad,
+            "codigo" => (string)$item->id,
+            "codTributo" => null,
+            "uniMedida" => 59,
+            "descripcion" => $item->descripcion,
+            "precioUni" => $baseSinIVA,
+            "montoDescu" => 0.0,
+            "ventaNoSuj" => 0.0,
+            "ventaExenta" => 0.0,
+            "ventaGravada" => $ventaGravada,
+            "tributos" => ["20"],
+            "psv" => 0.0,       // REQUERIDO
+            "noGravado" => 0.0  // REQUERIDO
+        ];
+    })->toArray();
+}
+
+
 }

@@ -141,8 +141,14 @@ class DteController extends Controller
 {
     $dte = Dte::findOrFail($id);
     
-    // Generar el JSON usando el servicio
-    $dteJson = $dteService->generarEstructura01($dte);
+    // Selección dinámica de estructura y versión
+    if ($dte->tipo_dte === '03') {
+        $dteJson = $dteService->generarEstructura03($dte);
+        $version = 3;
+    } else {
+        $dteJson = $dteService->generarEstructura01($dte);
+        $version = 1;
+    }
 
     $payload = [
         'Usuario' => "032267824",
@@ -151,10 +157,10 @@ class DteController extends Controller
         'DteJson' => json_encode($dteJson),
         'Nit' => "05152308851012",
         'PasswordPrivado' => 'Pw6r$LbMw93',
-        'TipoDte' => '01',
+        'TipoDte' => $dte->tipo_dte,
         'CodigoGeneracion' => $dte->codigo_generacion,
         'NumControl' => $dte->numero_control,
-        'VersionDte' => 1,
+        'VersionDte' => $version,
         'CorreoCliente' => $dte->customer->email
     ];
 
