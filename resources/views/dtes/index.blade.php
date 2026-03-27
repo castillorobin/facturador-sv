@@ -22,6 +22,16 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                    <div class="mt-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                        <ul class="list-disc ms-4">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg border border-gray-200">
                 <table class="w-full text-sm text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-300">
@@ -67,34 +77,60 @@
                                 </td>
 
                                 <td class="px-6 py-4">
-                                    <div class="flex justify-center">
-                                        @php
-                                            $colores = [
-                                                'BORRADOR' => 'bg-gray-100 text-gray-600 border-gray-300',
-                                                'PROCESADO' => 'bg-green-100 text-green-700 border-green-300',
-                                                'RECHAZADO' => 'bg-red-100 text-red-700 border-red-300',
-                                                'ANULADO' => 'bg-orange-100 text-orange-700 border-orange-300',
-                                            ];
-                                            $clase = $colores[$dte->estado] ?? 'bg-blue-100 text-blue-700';
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $clase }}">
-                                            {{ $dte->estado }}
-                                        </span>
-                                    </div>
-                                </td>
+    <div class="flex justify-center">
+        @php
+            // Definimos los colores hexadecimales directos
+            $config = [
+                'BORRADOR'  => ['bg' => '#f3f4f6', 'text' => '#4b5563', 'border' => '#d1d5db'],
+                'PROCESADO' => ['bg' => '#dcfce7', 'text' => '#15803d', 'border' => '#86efac'],
+                'RECHAZADO' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fca5a5'],
+                'ANULADO'   => ['bg' => '#ffedd5', 'text' => '#c2410c', 'border' => '#fdba74'],
+            ];
+            
+            $estilo = $config[$dte->estado] ?? ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'border' => '#93c5fd'];
+        @endphp
+
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border"
+              style="background-color: {{ $estilo['bg'] }} !important; 
+                     color: {{ $estilo['text'] }} !important; 
+                     border-color: {{ $estilo['border'] }} !important;">
+            {{ $dte->estado }}
+        </span>
+    </div>
+</td>
 
                                 <td class="px-6 py-4">
                                     <div class="flex justify-center items-center space-x-3">
-                                        <button title="Ver PDF" class="text-red-500 hover:text-red-700 transition transform hover:scale-110">
+                                        <button title="Ver PDF" class="text-red-500 hover:text-red-700 transition transform hover:scale-110" >
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                         </button>
-                                        <button title="Descargar JSON" class="text-blue-500 hover:text-blue-700 transition transform hover:scale-110">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                        </button>
+                                        @if($dte->estado == 'PROCESADO')
+    <a href="{{ route('dtes.downloadJson', $dte->id) }}" 
+       title="Descargar JSON" 
+       class="text-blue-500 hover:text-blue-700 transition transform hover:scale-110">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+        </svg>
+    </a>
+@else
+    <span class="text-gray-300 cursor-not-allowed" title="JSON no disponible">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+        </svg>
+    </span>
+@endif
                                         @if($dte->estado == 'BORRADOR')
-                                            <button title="Enviar a Hacienda" class="bg-indigo-600 text-white p-1 rounded hover:bg-indigo-700 transition shadow-sm">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                            </button>
+                                            <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="inline" style="margin-left: 10px;">
+                                                @csrf
+                                                <button type="submit" 
+                                                        title="Enviar a Hacienda" 
+                                                        style="background-color: #1d558a !important; color: white !important;"
+                                                        class="p-2 rounded-md hover:opacity-90 transition-all shadow-sm flex items-center justify-center active:scale-90" >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                    </svg> Enviar a Hacienda
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </td>

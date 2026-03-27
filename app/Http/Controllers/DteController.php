@@ -12,6 +12,12 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Services\DteService;
+use Illuminate\Support\Facades\Http;
+
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
+
 class DteController extends Controller
 {
     public function index()
@@ -43,11 +49,24 @@ class DteController extends Controller
         try {
             DB::beginTransaction();
 
-            // 2. Generar Correlativo (Número de Control)
-            // Formato MH sugerido: DTE-tipo-8_digitos_correlativos
-            $ultimoDte = Dte::where('tipo_dte', $request->tipo_dte)->latest()->first();
-            $correlativo = $ultimoDte ? (int) substr($ultimoDte->numero_control, -8) + 1 : 1;
-            $numeroControl = "DTE-" . $request->tipo_dte . "-" . str_pad($correlativo, 8, '0', STR_PAD_LEFT);
+            // 2. Generar Correlativo Oficial (Número de Control MH)
+            $establecimiento = "M001"; // Esto podría venir de la tabla 'companies' después
+            $puntoVenta = "P001";
+
+            // Buscamos el último DTE de este tipo para esta empresa
+            $ultimoDte = Dte::where('tipo_dte', $request->tipo_dte)
+                            ->where('company_id', auth()->user()->company_id)
+                            ->latest()
+                            ->first();
+
+            // Extraemos los últimos 15 dígitos del número de control anterior para sumar 1
+            $correlativoNumero = $ultimoDte ? (int) substr($ultimoDte->numero_control, -15) + 1 : 1;
+
+            // Formateamos: DTE - Tipo - EstablecimientoPuntoVenta - 15 dígitos
+            $numeroControl = "DTE-" . 
+                            $request->tipo_dte . "-" . 
+                            $establecimiento . $puntoVenta . "-" . 
+                            str_pad($correlativoNumero, 15, '0', STR_PAD_LEFT);
 
             // 3. Crear la Cabecera del DTE
             $dte = Dte::create([
@@ -116,5 +135,103 @@ class DteController extends Controller
             DB::rollBack();
             return back()->withErrors('Error al generar el DTE: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function enviarAHacienda($id, DteService $dteService)
+{
+    $dte = Dte::findOrFail($id);
+    
+    // Generar el JSON usando el servicio
+    $dteJson = $dteService->generarEstructura01($dte);
+
+    $payload = [
+        'Usuario' => "032267824",
+        'Password' => "Alexan24.",
+        'Ambiente' => '00',
+        'DteJson' => json_encode($dteJson),
+        'Nit' => "05152308851012",
+        'PasswordPrivado' => 'Pw6r$LbMw93',
+        'TipoDte' => '01',
+        'CodigoGeneracion' => $dte->codigo_generacion,
+        'NumControl' => $dte->numero_control,
+        'VersionDte' => 1,
+        'CorreoCliente' => $dte->customer->email
+    ];
+
+    try {
+        // Usamos el cliente HTTP de Laravel (más limpio que cURL)
+        $response = Http::timeout(30)->post('http://163.245.212.103:7122/api/procesar-dte', $payload);
+
+        if ($response->successful()) {
+            $respuestaAPI = $response->object(); // Usamos object para acceder como $respuestaAPI->campo
+
+            // 1. Datos de la respuesta (usando tus mismos nombres de variable)
+            $codigoGeneracion = $respuestaAPI->codigoGeneracion ?? $dte->codigo_generacion;
+            $numControl       = $respuestaAPI->numControl ?? $dte->numero_control;
+            $selloRecibido    = $respuestaAPI->selloRecibido ?? $respuestaAPI->SelloRecepcion ?? null;
+            $jwsFirmado       = $respuestaAPI->dteFirmado ?? null;
+
+            // 2. Construir el JSON LEGIBLE (basado en el array original)
+            $legible = $dteJson; 
+            $legible['identificacion']['codigoGeneracion'] = $codigoGeneracion;
+            
+            if ($numControl) {
+                $legible['identificacion']['numeroControl'] = $numControl;
+            }
+
+            // 3. Ordenar: Primero firmaElectronica, luego selloRecibido al final
+            if ($jwsFirmado) {
+                $legible['firmaElectronica'] = $jwsFirmado;
+            }
+
+            if ($selloRecibido) {
+                unset($legible['selloRecibido']); // Limpiamos por si existe
+                // Usamos array_merge para forzar que el sello sea el último campo del JSON
+                $legible = array_merge($legible, ['selloRecibido' => $selloRecibido]);
+            }
+
+            // 4. Guardar físicamente con el formato exacto que pide el contador
+            $rutaLegible = "dtes_json/legible_{$codigoGeneracion}.json";
+            
+            // IMPORTANTE: UNESCAPED_UNICODE para tildes y UNESCAPED_SLASHES para la firma JWS
+            Storage::put($rutaLegible, json_encode($legible, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+            // 5. Persistir en Base de Datos
+            $dte->update([
+                'estado' => 'PROCESADO',
+                'sello_recepcion' => $selloRecibido,
+                'ruta_json' => $rutaLegible,
+            ]);
+
+            return back()->with('success', 'DTE Procesado y JSON Legible generado correctamente.');
+        }
+//dd($dteJson);
+        return back()->withErrors('Error de Hacienda: ' . $response->body());
+
+    } catch (\Exception $e) {
+        return back()->withErrors('Error de conexión: ' . $e->getMessage());
+    }
+}
+
+    public function downloadJson($id)
+    {
+        $dte = Dte::findOrFail($id);
+
+        // Verificamos si el campo ruta_json tiene información
+        if (!$dte->ruta_json || !Storage::exists($dte->ruta_json)) {
+            return back()->withErrors('El archivo JSON no existe o aún no ha sido generado.');
+        }
+
+        // Obtenemos el contenido del archivo
+        $fileContent = Storage::get($dte->ruta_json);
+        
+        // Definimos un nombre para el archivo de descarga
+        $fileName = "DTE_" . ($dte->numero_control ?? $dte->codigo_generacion) . ".json";
+
+        // Retornamos la descarga
+        return response($fileContent, 200, [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 }

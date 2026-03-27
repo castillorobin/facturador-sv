@@ -25,7 +25,11 @@ Route::middleware('auth')->group(function () {
     // Rutas para gestión de clientes
     Route::resource('customers', CustomerController::class);
     Route::resource('products', ProductController::class);
+
+    Route::post('dtes/{id}/enviar', [DteController::class, 'enviarAHacienda'])->name('dtes.enviar');
     Route::resource('dtes', DteController::class);
+
+    Route::get('dtes/{id}/download-json', [DteController::class, 'downloadJson'])->name('dtes.downloadJson');
 });
 
 require __DIR__.'/auth.php';

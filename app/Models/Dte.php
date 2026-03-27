@@ -22,6 +22,10 @@ class Dte extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     protected $casts = [
     'fecha_emision' => 'datetime',
