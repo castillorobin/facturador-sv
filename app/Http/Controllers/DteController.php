@@ -234,4 +234,42 @@ class DteController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ]);
     }
+
+    public function verPdf($id)
+        {
+            $dte = Dte::findOrFail($id);
+
+            if ($dte->estado !== 'PROCESADO' || !Storage::exists($dte->ruta_json)) {
+                return back()->withErrors('El DTE aún no tiene un JSON procesado.');
+            }
+
+            // 1. Obtener el contenido del JSON legible
+            $jsonContent = Storage::get($dte->ruta_json);
+
+            // 2. Construir el payload que espera tu API de C#
+            $payload = [
+                'dteJson'       => $jsonContent,
+                'selloRecibido' => $dte->sello_recepcion,
+                'tipoDte'       => '01', // O $dte->tipo_dte
+                'carrera'       => '-',
+                'observacion'   => '-'
+            ];
+
+            try {
+                // 3. Enviamos el POST directamente con el array. 
+                // Laravel se encarga de convertirlo a JSON y poner los Headers correctos.
+                $response = Http::timeout(60)->post('http://163.245.212.103:7122/api/generar-pdf', $payload);
+
+                if ($response->successful()) {
+                    return response($response->body(), 200)
+                        ->header('Content-Type', 'application/pdf')
+                        ->header('Content-Disposition', 'inline; filename="Factura-'.$dte->numero_control.'.pdf"');
+                }
+
+                return back()->withErrors('Error de la API de PDF ('.$response->status().'): ' . $response->body());
+
+            } catch (\Exception $e) {
+                return back()->withErrors('Error de conexión: ' . $e->getMessage());
+            }
+        }
 }

@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('dtes', DteController::class);
 
     Route::get('dtes/{id}/download-json', [DteController::class, 'downloadJson'])->name('dtes.downloadJson');
+
+    Route::get('dtes/{id}/ver-pdf', [DteController::class, 'verPdf'])->name('dtes.verPdf');
 });
 
 require __DIR__.'/auth.php';

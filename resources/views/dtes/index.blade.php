@@ -99,41 +99,51 @@
     </div>
 </td>
 
-                                <td class="px-6 py-4">
-                                    <div class="flex justify-center items-center space-x-3">
-                                        <button title="Ver PDF" class="text-red-500 hover:text-red-700 transition transform hover:scale-110" >
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        </button>
-                                        @if($dte->estado == 'PROCESADO')
-    <a href="{{ route('dtes.downloadJson', $dte->id) }}" 
-       title="Descargar JSON" 
-       class="text-blue-500 hover:text-blue-700 transition transform hover:scale-110">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-        </svg>
-    </a>
-@else
-    <span class="text-gray-300 cursor-not-allowed" title="JSON no disponible">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-        </svg>
-    </span>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    <div class="flex items-center justify-center space-x-5 gap-2">
+        
+      @if(isset($dte->estado) && strtoupper($dte->estado) == 'BORRADOR')
+    <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="inline">
+        @csrf
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest shadow-sm transition"
+                style="background-color: #0d6efd !important; color: #ffffff !important; border: 1px solid #0a58ca !important; cursor: pointer;">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="white" style="width: 16px; height: 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+
+            ENVIAR A MH
+        </button>
+    </form>
 @endif
-                                        @if($dte->estado == 'BORRADOR')
-                                            <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="inline" style="margin-left: 10px;">
-                                                @csrf
-                                                <button type="submit" 
-                                                        title="Enviar a Hacienda" 
-                                                        style="background-color: #1d558a !important; color: white !important;"
-                                                        class="p-2 rounded-md hover:opacity-90 transition-all shadow-sm flex items-center justify-center active:scale-90" >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                                    </svg> Enviar a Hacienda
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
+
+        @if($dte->estado == 'PROCESADO')
+            <a href="{{ route('dtes.verPdf', $dte->id) }}" target="_blank" title="Ver Factura PDF"
+               class="text-rose-500 hover:text-rose-600 transition transform hover:scale-125">
+                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2 2h12a2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V4a2 2 0 0 0-2-2h-7Zm-6 9a1 1 0 0 0-1 1v5a1 1 0 1 0 2 0v-1h.5a2.5 2.5 0 0 0 0-5H5Zm1.5 3H6v-1h.5a.5.5 0 0 1 0 1Zm4.5-3a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h1.376A2.626 2.626 0 0 0 15 15.375v-1.75A2.626 2.626 0 0 0 12.375 11H11Zm1 5v-3h.375a.626.626 0 0 1 .625.626v1.748a.625.625 0 0 1-.626.626H12Zm5-5a1 1 0 0 0-1 1v5a1 1 0 1 0 2 0v-1h1a1 1 0 1 0 0-2h-1v-1h1a1 1 0 1 0 0-2h-2Z" clip-rule="evenodd"/>
+</svg>
+
+            </a>
+
+            <a href="{{ route('dtes.downloadJson', $dte->id) }}" title="Descargar JSON"
+               class="text-indigo-500 hover:text-indigo-600 transition transform hover:scale-125">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+            </a>
+        @endif
+
+        <button type="button" title="{{ $dte->estado == 'PROCESADO' ? 'Anular DTE' : 'Eliminar' }}"
+                class="text-gray-400 hover:text-red-600 transition transform hover:scale-125">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+
+    </div>
+</td>
                             </tr>
                         @empty
                             <tr>
