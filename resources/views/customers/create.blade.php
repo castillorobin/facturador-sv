@@ -25,7 +25,7 @@
                     <div>
                         <x-input-label for="tipo_documento" value="Tipo de Documento" />
                         <select name="tipo_documento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            <option value="13">13 - DUI</option>
+                            
                             <option value="36">36 - NIT</option>
                             <option value="37">37 - Pasaporte</option>
                             

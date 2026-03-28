@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('dtes/{id}/download-json', [DteController::class, 'downloadJson'])->name('dtes.downloadJson');
 
     Route::get('dtes/{id}/ver-pdf', [DteController::class, 'verPdf'])->name('dtes.verPdf');
+    Route::post('dtes/{id}/reenviar-correo', [DteController::class, 'reenviarCorreo'])->name('dtes.reenviarCorreo');
+    Route::post('dtes/{id}/anular', [DteController::class, 'anular'])->name('dtes.anular');
 });
 
 require __DIR__.'/auth.php';

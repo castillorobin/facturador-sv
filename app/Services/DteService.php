@@ -63,7 +63,7 @@ class DteService
                 "codPuntoVenta" => null
             ],
             "receptor" => [
-                "tipoDocumento" => $dte->customer->tipo_documento == '36' ? '36' : '37',
+                "tipoDocumento" => $dte->customer->tipo_documento,
                 "numDocumento" => $dte->customer->num_documento,
                 "nrc" => null,
                 "nombre" => $dte->customer->nombre,
@@ -210,14 +210,14 @@ class DteService
             "nit" => $dte->company->nit,
             "nrc" => $dte->company->nrc,
             "nombre" => $dte->company->nombre,
-            "codActividad" => "96092",
-            "descActividad" => "Servicios n.c.p.",
+            "codActividad" => $dte->company->cod_actividad,
+            "descActividad" => $dte->company->desc_actividad,
             "nombreComercial" => $dte->company->nombre_comercial,
-            "tipoEstablecimiento" => "02",
+            "tipoEstablecimiento" => $dte->company->tipo_establecimiento ?? "02",
             "direccion" => [
-                "departamento" => "02",
-                "municipio" => "01",
-                "complemento" => $dte->company->direccion
+                "departamento" => $dte->company->departamento ?? "02",
+                "municipio" => $dte->company->municipio ?? "01",
+                "complemento" => $dte->company->direccion_complemento ?? $dte->company->direccion ?? "Direccion de Establecimiento"
             ],
             "telefono" => $dte->company->telefono,
             "correo" => $dte->company->email,
@@ -231,12 +231,12 @@ class DteService
             "nrc" => str_replace('-', '', $dte->customer->nrc), // Limpiar guiones
             "nombre" => $dte->customer->nombre,
             "nombreComercial" => $dte->customer->nombre_comercial ?? $dte->customer->nombre,
-            "codActividad" => "41001",
-            "descActividad" => "Otros",
+            "codActividad" => $dte->customer->cod_actividad,
+            "descActividad" => $dte->customer->desc_actividad,
             "direccion" => [
-                "departamento" => "02",
-                "municipio" => "15",
-                "complemento" => $dte->customer->direccion
+                "departamento" => $dte->customer->departamento ?? "02",
+                "municipio" => $dte->customer->municipio ?? "15",
+                "complemento" => $dte->customer->direccion_complemento ?? $dte->customer->direccion ?? "San Salvador"
             ],
             "telefono" => $dte->customer->telefono,
             "correo" => $dte->customer->email,
@@ -287,34 +287,87 @@ class DteService
     ];
 }
 
-private function mapearItemsCCF($items)
-{
-    return $items->map(function ($item, $key) {
-        $precioConIVA = (float)$item->precio_unitario;
-        $cantidad = (float)$item->cantidad;
-        
-        $baseSinIVA = round($precioConIVA / 1.13, 2);
-        $ventaGravada = round($baseSinIVA * $cantidad, 2);
+        private function mapearItemsCCF($items)
+        {
+            return $items->map(function ($item, $key) {
+                $precioConIVA = (float)$item->precio_unitario;
+                $cantidad = (float)$item->cantidad;
+                
+                $baseSinIVA = round($precioConIVA / 1.13, 2);
+                $ventaGravada = round($baseSinIVA * $cantidad, 2);
 
-        return [
-            "numItem" => $key + 1,
-            "tipoItem" => 1,
-            "numeroDocumento" => null,
-            "cantidad" => $cantidad,
-            "codigo" => (string)$item->id,
-            "codTributo" => null,
-            "uniMedida" => 59,
-            "descripcion" => $item->descripcion,
-            "precioUni" => $baseSinIVA,
-            "montoDescu" => 0.0,
-            "ventaNoSuj" => 0.0,
-            "ventaExenta" => 0.0,
-            "ventaGravada" => $ventaGravada,
-            "tributos" => ["20"],
-            "psv" => 0.0,       // REQUERIDO
-            "noGravado" => 0.0  // REQUERIDO
-        ];
-    })->toArray();
+                return [
+                    "numItem" => $key + 1,
+                    "tipoItem" => 1,
+                    "numeroDocumento" => null,
+                    "cantidad" => $cantidad,
+                    "codigo" => (string)$item->id,
+                    "codTributo" => null,
+                    "uniMedida" => 59,
+                    "descripcion" => $item->descripcion,
+                    "precioUni" => $baseSinIVA,
+                    "montoDescu" => 0.0,
+                    "ventaNoSuj" => 0.0,
+                    "ventaExenta" => 0.0,
+                    "ventaGravada" => $ventaGravada,
+                    "tributos" => ["20"],
+                    "psv" => 0.0,       // REQUERIDO
+                    "noGravado" => 0.0  // REQUERIDO
+                ];
+            })->toArray();
+        }
+
+        public function generarEstructuraInvalidacion(Dte $dte, $motivo, $nombreResponsable = "ROBIN ANTONIO CASTILLO SAAVEDRA", $documentoResponsable = "032267824")
+{
+    // Limpiamos documentos de guiones
+    $docResponsableClean = str_replace('-', '', $documentoResponsable);
+    $docReceptorClean = str_replace('-', '', $dte->customer->nit ?? $dte->customer->num_documento);
+
+    return [
+        "identificacion" => [
+            "version" => 2,
+            "ambiente" => "00",
+            "codigoGeneracion" => strtoupper(\Illuminate\Support\Str::uuid()->toString()), // UUID nuevo para la anulación
+            "fecAnula" => now()->format('Y-m-d'),
+            "horAnula" => now()->format('H:i:s'),
+        ],
+        "emisor" => [
+            "nit" => $dte->company->nit,
+            "nombre" => $dte->company->nombre,
+            "tipoEstablecimiento" => "02", // O "01" según tu configuración
+            "nomEstablecimiento" => $dte->company->nombre_comercial ?? "Casa Matriz",
+            "codEstableMH" => null,
+            "codEstable" => "0001", 
+            "codPuntoVentaMH" => null,
+            "codPuntoVenta" => "0001",
+            "telefono" => $dte->company->telefono,
+            "correo" => $dte->company->email,
+        ],
+        "documento" => [
+            "tipoDte" => $dte->tipo_dte,
+            "codigoGeneracion" => $dte->codigo_generacion, // El original del DTE a anular
+            "selloRecibido" => $dte->sello_recepcion,     // El original
+            "numeroControl" => $dte->numero_control,     // El original
+            "fecEmi" => $dte->fecha_emision->format('Y-m-d'),
+            "montoIva" => null, // El ejemplo lo manda como null
+            "codigoGeneracionR" => null, // null según el ejemplo
+            "tipoDocumento" => $dte->customer->tipo_documento ?? "36",
+            "numDocumento" => $docReceptorClean,
+            "nombre" => $dte->customer->nombre,
+            "telefono" => $dte->customer->telefono ?? null,
+            "correo" => $dte->customer->email ?? null,
+        ],
+        "motivo" => [
+            "tipoAnulacion" => 2,
+            "motivoAnulacion" => $motivo,
+            "nombreResponsable" => $nombreResponsable,
+            "tipDocResponsable" => "36", // NIT
+            "numDocResponsable" => $docResponsableClean,
+            "nombreSolicita" => $dte->customer->nombre,
+            "tipDocSolicita" => $dte->customer->tipo_documento ?? "36",
+            "numDocSolicita" => $docReceptorClean,
+        ]
+    ];
 }
 
 
