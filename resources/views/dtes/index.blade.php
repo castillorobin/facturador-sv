@@ -1,5 +1,16 @@
 <x-app-layout>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    
+    <style>
+        /* Parche para que el buscador no se vea "apretado" con Tailwind */
+        .dataTables_wrapper { padding: 20px; }
+        .dataTables_filter input { 
+            border: 1px solid #d1d5db !important; 
+            border-radius: 0.375rem !important; 
+            margin-bottom: 15px;
+        }
+        .dataTables_length select { border-radius: 0.375rem !important; padding-right: 2rem !important; }
+    </style>
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
@@ -22,7 +33,7 @@
                 <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 font-bold shadow-sm">
                     {{ session('success') }}
                 </div>
-            @endif
+            @endif 
 
             @if ($errors->any())
                 <div class="mt-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
@@ -35,7 +46,7 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg border border-gray-200">
-                <table class="w-full text-sm text-gray-500">
+                <table class="w-full text-sm text-gray-500" id="tablaDtes">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-300">
                         <tr>
                             <th class="px-6 py-4 text-center">Fecha / Control</th>
@@ -135,6 +146,7 @@
         </div>
     </div>
 
+    
     <script>
     function confirmarAnulacion(id, numControl) {
         Swal.fire({
@@ -170,4 +182,45 @@
         });
     }
     </script>
+
+    <script>
+    // Función para cargar scripts dinámicamente en orden
+    function loadScript(src, callback) {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = src;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    // 1. Cargamos jQuery
+    loadScript("https://code.jquery.com/jquery-3.7.0.min.js", function() {
+        console.log("jQuery cargado.");
+        window.$ = window.jQuery = jQuery;
+
+        // 2. Cargamos DataTables después de jQuery
+        loadScript("https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js", function() {
+            console.log("DataTables cargado.");
+
+            // 3. Inicializamos la tabla
+            $(document).ready(function() {
+                if ($.fn.DataTable) {
+                    $('#tablaDtes').DataTable({
+                        "order": [[0, "desc"]],
+                        "language": {
+                            "url": "https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json"
+                        },
+                        "pageLength": 10,
+                        "dom": '<"flex justify-between mb-4"lf>rt<"flex justify-between mt-4"ip>'
+                    });
+                }
+            });
+        });
+        
+        // 4. Cargamos SweetAlert (puede ser paralelo)
+        loadScript("https://cdn.jsdelivr.net/npm/sweetalert2@11", function() {
+            console.log("SweetAlert2 cargado.");
+        });
+    });
+</script>
 </x-app-layout>
