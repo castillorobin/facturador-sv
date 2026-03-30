@@ -6,6 +6,8 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DteController;
+use App\Http\Controllers\DteExportController;
+use App\Http\Controllers\NotaCreditoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,6 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::get('dtes/{id}/ver-pdf', [DteController::class, 'verPdf'])->name('dtes.verPdf');
     Route::post('dtes/{id}/reenviar-correo', [DteController::class, 'reenviarCorreo'])->name('dtes.reenviarCorreo');
     Route::post('dtes/{id}/anular', [DteController::class, 'anular'])->name('dtes.anular');
+
+    Route::post('/dtes/exportar-zip', [DteExportController::class, 'exportZip'])->name('dtes.exportZip');
+    Route::get('/notas/create', [NotaCreditoController::class, 'create'])->name('notas.create');
+    Route::post('/notas/store', [NotaCreditoController::class, 'store'])->name('notas.store');
 });
 
 require __DIR__.'/auth.php';

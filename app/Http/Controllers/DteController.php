@@ -20,14 +20,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Cargamos los DTEs con su cliente para evitar múltiples consultas (Eager Loading)
-        $dtes = Dte::with('customer')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+        // Si no vienen fechas en el request, usamos la fecha de hoy para AMBAS
+    $fechaInicio = $request->get('fecha_inicio', date('Y-m-d'));
+    $fechaFin = $request->get('fecha_fin', date('Y-m-d'));
 
-        return view('dtes.index', compact('dtes'));
+    // Consultar los DTEs filtrados
+    $dtes = Dte::with('customer')
+        ->whereBetween('fecha_emision', [
+            $fechaInicio . ' 00:00:00',
+            $fechaFin . ' 23:59:59'
+        ])
+        ->orderBy('fecha_emision', 'desc')
+        ->get();
+
+    return view('dtes.index', compact('dtes', 'fechaInicio', 'fechaFin'));
     }
     public function create()
     {
@@ -393,14 +401,23 @@ class DteController extends Controller
                         if ($response->successful()) {
                             $data = $response->json();
                             
-                            // Si Hacienda acepta, el estado cambia a ANULADO
+                            // 1. Definir la ruta del archivo
+                            $nombreArchivo = "INVALIDACION_" . $dte->codigo_generacion . ".json";
+                            $rutaParaBaseDatos = "dtes_json/" . $nombreArchivo;
+
+                            // Laravel lo meterá solito en /storage/app/private/dtes_json/
+                            Storage::put($rutaParaBaseDatos, $response->body()); 
+
                             $dte->update([
+                                'json_invalidacion_path' => $rutaParaBaseDatos,
                                 'estado' => 'ANULADO',
                                 'sello_recepcion' => $data['selloRecibido'] ?? $dte->sello_recepcion,
-                                // Si tu API devuelve el sello de invalidación en otro campo, cámbialo aquí
+                                'json_invalidacion_path' => $rutaCarpeta, // IMPORTANTE: Guardar la ruta
+                                'fecha_invalidacion' => now(),
+                                'motivo_invalidacion' => $motivo
                             ]);
 
-                            return back()->with('success', 'Documento invalidado exitosamente ante Hacienda.');
+                            return back()->with('success', 'Documento invalidado y guardado correctamente.');
                         }
 
                         // Si da error 400, imprimimos el cuerpo para ver qué faltó

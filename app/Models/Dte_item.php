@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Dte_item extends Model
 {
     protected $guarded = [];
@@ -12,4 +14,11 @@ class Dte_item extends Model
     {
         return $this->belongsTo(Dte::class);
     }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+   
 }

@@ -12,22 +12,19 @@
         .dataTables_length select { border-radius: 0.375rem !important; padding-right: 2rem !important; }
     </style>
 
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Historial de Documentos (DTE)') }}
-            </h2>
-            <a href="{{ route('dtes.create') }}" 
-               style="background-color: #4f46e5 !important; color: white !important;"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md font-bold text-xs uppercase tracking-widest hover:opacity-90 transition shadow-sm">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Nueva Venta
-            </a>
-        </div>
-    </x-slot>
 
     <div class="py-12">
+
+
+       
+
+
+
+
+
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+             
             
             @if(session('success'))
                 <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 font-bold shadow-sm">
@@ -46,6 +43,47 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg border border-gray-200">
+                <div class="bg-indigo-50 p-4 rounded-lg mb-6 border border-indigo-100 shadow-sm">
+    <form method="GET" action="{{ route('dtes.index') }}" id="filterForm" class="flex flex-wrap items-end gap-4">
+        <div>
+            <label class="block text-xs font-bold text-indigo-700 uppercase">Desde:</label>
+            <input type="date" name="fecha_inicio" value="{{ $fechaInicio }}" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-indigo-700 uppercase">Hasta:</label>
+            <input type="date" name="fecha_fin" value="{{ $fechaFin }}" 
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        </div>
+        
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition shadow-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            Filtrar Lista
+        </button>
+
+        <button type="button" onclick="exportarZip()"
+                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-bold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition shadow-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Exportar ZIP
+        </button>
+    </form>
+</div>
+
+<form id="formZip" action="{{ route('dtes.exportZip') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="fecha_inicio" id="zip_inicio">
+    <input type="hidden" name="fecha_fin" id="zip_fin">
+</form>
+
+<script>
+    function exportarZip() {
+        // Copiamos las fechas del filtro al formulario del ZIP
+        document.getElementById('zip_inicio').value = document.getElementsByName('fecha_inicio')[0].value;
+        document.getElementById('zip_fin').value = document.getElementsByName('fecha_fin')[0].value;
+        document.getElementById('formZip').submit();
+    }
+</script>
                 <table class="w-full text-sm text-gray-500" id="tablaDtes">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-300">
                         <tr>
@@ -131,6 +169,16 @@
                                                     title="Anular DTE" class="text-red-500 hover:text-red-700 transition transform hover:scale-125">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             </button>
+                                        @endif
+
+                                        @if($dte->tipo_dte == '03' && $dte->estado == 'PROCESADO')
+                                            <a href="{{ route('notas.create', ['dte_id' => $dte->id]) }}" 
+                                            title="Generar Nota de Crédito"
+                                            class="text-amber-500 hover:text-amber-700 transition transform hover:scale-110">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                            </a>
                                         @endif
                                     </div>
                                 </td>

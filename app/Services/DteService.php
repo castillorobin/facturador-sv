@@ -370,5 +370,40 @@ class DteService
     ];
 }
 
+public function generarEstructuraNotaCredito(Dte $dteOriginal, $itemsModificados, $motivo)
+{
+    return [
+        "identificacion" => [
+            "version" => 3,
+            "tipoDte" => "05",
+            // ... correlativos nuevos ...
+        ],
+        "documentoRelacionado" => [
+            [
+                "tipoDocumento" => "03", // Siempre 03 porque afecta a un CCF
+                "tipoGeneracion" => 1,  // 1 = Electrónico
+                "numeroDocumento" => $dteOriginal->codigo_generacion,
+                "fechaEmision" => $dteOriginal->fecha_emision->format('Y-m-d')
+            ]
+        ],
+        "emisor" => [ /* Tus datos */ ],
+        "receptor" => [ /* Datos del cliente del CCF original */ ],
+        "ventaTercero" => null,
+        "cuerpoDoc" => $itemsModificados, // Los productos devueltos o rebajados
+        "resumen" => [
+            "totalNoGravado" => 0,
+            "totalGravada" => $totalRebaja,
+            "subTotal" => $totalRebaja,
+            "montoSujetoPercepcion" => 0,
+            "ivaPerci1" => 0,
+            "ivaRetel1" => 0,
+            "retencionRenta" => 0,
+            "montoTotalOperacion" => $totalRebaja + ($totalRebaja * 0.13),
+            "totalLetras" => $this->numeroALetras($totalConIva),
+            // ...
+        ]
+    ];
+}
+
 
 }

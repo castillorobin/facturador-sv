@@ -4,30 +4,33 @@ namespace App\Models;
 
 use App\Traits\Multitenant;
 use Illuminate\Database\Eloquent\Model;
+// ESTAS DOS LÍNEAS SON LAS QUE ARREGLAN EL ERROR:
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Dte extends Model
 {
     use Multitenant;
 
-    protected $guarded = []; // O define todos los fillables que pusiste en la migración
+    protected $guarded = [];
 
-    // Relación con los productos/detalles de la factura
-    public function items()
+    // Cambiamos 'items' a 'details' para que coincida con lo que pusimos en el controlador
+    public function details(): HasMany
     {
-        return $this->hasMany(Dte_item::class);
+        return $this->hasMany(Dte_item::class, 'dte_id');
     }
 
-    // Relación con el cliente (Receptor)
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
-    public function company()
+
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
     protected $casts = [
-    'fecha_emision' => 'datetime',
-];
+        'fecha_emision' => 'datetime',
+    ];
 }
