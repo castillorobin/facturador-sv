@@ -105,14 +105,13 @@
                                 </div>
                             </div>
 
-                            <div class="mt-8 space-y-3">
-                                <button type="submit" 
-                                    style="background-color: #059669 !important; color: white !important; margin-top: 1rem !important; "
-                                    class=" inline-flex justify-center items-center px-4 py-4 border border-transparent rounded-lg font-black text-sm uppercase tracking-widest hover:opacity-90 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-150 shadow-lg">
+                            <div class="mt-8 space-y-3 flex flex-col items-center"> <button type="submit" 
+                                        style="background-color: #059669 !important; color: white !important;"
+                                        class="w-full inline-flex justify-center items-center px-4 py-4 border border-transparent rounded-lg font-black text-sm uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all duration-150 shadow-lg">
+                                    Emitir Factura (DTE)
+                                </button>
                                 
-                                Emitir Factura (DTE)
-                            </button>
-                                <a href="{{ route('dashboard') }}" class="block text-center text-sm text-gray-500 hover:underline mt-4">
+                                <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:underline mt-4">
                                     Cancelar Venta
                                 </a>
                             </div>

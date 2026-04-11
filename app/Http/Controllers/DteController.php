@@ -32,7 +32,7 @@ class DteController extends Controller
             $fechaInicio . ' 00:00:00',
             $fechaFin . ' 23:59:59'
         ])
-        ->orderBy('fecha_emision', 'desc')
+        ->orderBy('id', 'desc')
         ->get();
 
     return view('dtes.index', compact('dtes', 'fechaInicio', 'fechaFin'));
@@ -405,14 +405,14 @@ class DteController extends Controller
                             $nombreArchivo = "INVALIDACION_" . $dte->codigo_generacion . ".json";
                             $rutaParaBaseDatos = "dtes_json/" . $nombreArchivo;
 
-                            // Laravel lo meterá solito en /storage/app/private/dtes_json/
+                            // Guardamos el JSON de respuesta de Hacienda
                             Storage::put($rutaParaBaseDatos, $response->body()); 
 
+                            // 2. Actualizar el DTE
                             $dte->update([
-                                'json_invalidacion_path' => $rutaParaBaseDatos,
                                 'estado' => 'ANULADO',
                                 'sello_recepcion' => $data['selloRecibido'] ?? $dte->sello_recepcion,
-                                'json_invalidacion_path' => $rutaCarpeta, // IMPORTANTE: Guardar la ruta
+                                'json_invalidacion_path' => $rutaParaBaseDatos, // <-- AQUÍ SE CORRIGIÓ EL NOMBRE
                                 'fecha_invalidacion' => now(),
                                 'motivo_invalidacion' => $motivo
                             ]);
@@ -427,4 +427,31 @@ class DteController extends Controller
                         return back()->withErrors('Error de conexión: ' . $e->getMessage());
                     }
                 }
+
+                public function destroy($id)
+                    {
+                        $dte = Dte::findOrFail($id);
+
+                        // SEGURIDAD: Solo permitir borrar si no ha sido enviado a Hacienda
+                        if ($dte->estado !== 'BORRADOR') {
+                            return back()->withErrors('No se puede eliminar un DTE que ya ha sido procesado o anulado ante Hacienda.');
+                        }
+
+                        try {
+                            DB::beginTransaction();
+                            
+                            // 1. Borrar los ítems primero (por la relación de base de datos)
+                            $dte->items()->delete(); 
+                            
+                            // 2. Borrar la cabecera
+                            $dte->delete();
+
+                            DB::commit();
+
+                            return redirect()->route('dtes.index')->with('success', 'Borrador eliminado correctamente. El número de control ha sido liberado.');
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            return back()->withErrors('Error al eliminar el borrador: ' . $e->getMessage());
+                        }
+                    }
 }

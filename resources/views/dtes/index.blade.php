@@ -113,24 +113,24 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-    @if($dte->tipo_dte == '01')
-        <span class="px-2 py-1 rounded bg-blue-100 text-blue-700 text-[10px] font-black uppercase">
-            Factura
-        </span>
-    @elseif($dte->tipo_dte == '03')
-        <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase">
-            Crédito Fiscal
-        </span>
-    @elseif($dte->tipo_dte == '05')
-        <span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-[10px] font-black uppercase">
-            Nota de Crédito
-        </span>
-    @else
-        <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-[10px] font-black uppercase">
-            Otro ({{ $dte->tipo_dte }})
-        </span>
-    @endif
-</td>
+                                    @if($dte->tipo_dte == '01')
+                                        <span class="px-2 py-1 rounded bg-blue-100 text-blue-700 text-[10px] font-black uppercase">
+                                            Factura
+                                        </span>
+                                    @elseif($dte->tipo_dte == '03')
+                                        <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase">
+                                            Crédito Fiscal
+                                        </span>
+                                    @elseif($dte->tipo_dte == '05')
+                                        <span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-[10px] font-black uppercase">
+                                            Nota de Crédito
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-[10px] font-black uppercase">
+                                            Otro ({{ $dte->tipo_dte }})
+                                        </span>
+                                    @endif
+                                </td>
 
                                 <td class="px-6 py-4 text-center font-black text-gray-900 text-base">
                                     $ {{ number_format($dte->total_pagar, 2) }}
@@ -154,15 +154,30 @@
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex items-center justify-center space-x-3">
-                                        @if(strtoupper($dte->estado) == 'BORRADOR')
-                                            <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="inline">
+                                       @if(strtoupper($dte->estado) == 'BORRADOR')
+                                            <div class="flex items-center space-x-2">
+                                                <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition"
+                                                            style="background-color: #0d6efd !important; color: #ffffff !important; border: 1px solid #0a58ca !important;">
+                                                        ENVIAR MH
+                                                    </button>
+                                                </form>
+
+                                                <button type="button" 
+                                                    onclick="confirmarEliminacion({{ $dte->id }}, '{{ $dte->numero_control }}')"
+                                                    title="Eliminar Borrador"
+                                                    class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition hover:opacity-90"
+                                                    style="background-color: #dc3545 !important; color: #ffffff !important; border: 1px solid #b02a37 !important;">
+                                                BORRAR
+                                            </button>
+
+                                            <form id="delete-form-{{ $dte->id }}" action="{{ route('dtes.destroy', $dte->id) }}" method="POST" style="display: none;">
                                                 @csrf
-                                                <button type="submit" 
-                                                        class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition"
-                                                        style="background-color: #0d6efd !important; color: #ffffff !important; border: 1px solid #0a58ca !important;">
-                                                    ENVIAR MH
-                                                </button>
+                                                @method('DELETE')
                                             </form>
+                                            </div>
                                         @endif
 
                                         @if($dte->estado == 'PROCESADO')
@@ -268,7 +283,7 @@
             $(document).ready(function() {
                 if ($.fn.DataTable) {
                     $('#tablaDtes').DataTable({
-                        "order": [[0, "desc"]],
+                        "order": [],
                         "language": {
                             "url": "https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json"
                         },
@@ -284,5 +299,25 @@
             console.log("SweetAlert2 cargado.");
         });
     });
+
+
+    function confirmarEliminacion(id, numControl) {
+    Swal.fire({
+        title: '¿Eliminar borrador?',
+        text: "Se borrará el registro " + numControl + " permanentemente de la base de datos.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', // Rojo para peligro
+        cancelButtonColor: '#3085d6', // Azul para cancelar
+        confirmButtonText: 'Sí, borrar registro',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true // Pone el botón de cancelar a la izquierda
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Si el usuario confirma, buscamos el form oculto y lo enviamos
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
 </script>
 </x-app-layout>

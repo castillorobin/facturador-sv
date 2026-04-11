@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dtes/exportar-zip', [DteExportController::class, 'exportZip'])->name('dtes.exportZip');
     Route::get('/notas/create', [NotaCreditoController::class, 'create'])->name('notas.create');
     Route::post('/notas/store', [NotaCreditoController::class, 'store'])->name('notas.store');
+    Route::delete('/dtes/{id}', [DteController::class, 'destroy'])->name('dtes.destroy');
 });
 
 require __DIR__.'/auth.php';

@@ -20,6 +20,11 @@ class Dte extends Model
         return $this->hasMany(Dte_item::class, 'dte_id');
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(Dte_item::class, 'dte_id');
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
