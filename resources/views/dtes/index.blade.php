@@ -113,10 +113,24 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-[10px] font-black uppercase">
-                                        {{ $dte->tipo_dte == '01' ? 'Factura' : 'Crédito Fiscal' }}
-                                    </span>
-                                </td>
+    @if($dte->tipo_dte == '01')
+        <span class="px-2 py-1 rounded bg-blue-100 text-blue-700 text-[10px] font-black uppercase">
+            Factura
+        </span>
+    @elseif($dte->tipo_dte == '03')
+        <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase">
+            Crédito Fiscal
+        </span>
+    @elseif($dte->tipo_dte == '05')
+        <span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-[10px] font-black uppercase">
+            Nota de Crédito
+        </span>
+    @else
+        <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-[10px] font-black uppercase">
+            Otro ({{ $dte->tipo_dte }})
+        </span>
+    @endif
+</td>
 
                                 <td class="px-6 py-4 text-center font-black text-gray-900 text-base">
                                     $ {{ number_format($dte->total_pagar, 2) }}

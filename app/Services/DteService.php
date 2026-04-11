@@ -3,6 +3,8 @@ namespace App\Services;
 
 use App\Models\Dte;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http; 
+use Illuminate\Support\Facades\Storage;
 
 class DteService
 {
@@ -402,6 +404,143 @@ public function generarEstructuraNotaCredito(Dte $dteOriginal, $itemsModificados
             "totalLetras" => $this->numeroALetras($totalConIva),
             // ...
         ]
+    ];
+}
+
+public function generarNumeroControl($tipoDte)
+{
+    // 1. Definimos los prefijos que ya estás usando
+    $establecimiento = "M001"; 
+    $puntoVenta = "P001";
+
+    // 2. Buscamos el último DTE de ese tipo para la empresa actual
+    $ultimoDte = \App\Models\Dte::where('tipo_dte', $tipoDte)
+        ->where('company_id', auth()->user()->company_id)
+        ->latest()
+        ->first();
+
+    // 3. Extraemos los últimos 15 dígitos del número de control anterior para sumar 1
+    // Si no existe, empezamos en 1
+    $correlativoNumero = $ultimoDte ? (int) substr($ultimoDte->numero_control, -15) + 1 : 1;
+
+    // 4. Formateamos el string final
+    return "DTE-" . 
+           $tipoDte . "-" . 
+           $establecimiento . $puntoVenta . "-" . 
+           str_pad($correlativoNumero, 15, '0', STR_PAD_LEFT);
+}
+
+public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalNota)
+{
+    // 1. Intentar cargar el JSON original para heredar los datos exactos del receptor
+    $originalData = json_decode(Storage::get($dteOriginal->ruta_json), true);
+
+    $montoGravado = round($totalNota / 1.13, 2);
+    $iva = round($totalNota - $montoGravado, 2);
+
+    return [
+        "identificacion" => [
+            "version" => 3,
+            "ambiente" => "00",
+            "tipoDte" => "05",
+            "numeroControl" => $this->generarNumeroControl("05"),
+            "codigoGeneracion" => strtoupper((string) \Illuminate\Support\Str::uuid()),
+            "tipoModelo" => 1,
+            "tipoOperacion" => 1,
+            "fecEmi" => date('Y-m-d'),
+            "horEmi" => date('H:i:s'),
+            "tipoMoneda" => "USD",
+            "tipoContingencia" => null,
+            "motivoContin" => null
+        ],
+        "documentoRelacionado" => [
+            [
+                "tipoDocumento" => "03",
+                "tipoGeneracion" => 1, // 1 para DTE
+                "numeroDocumento" => $dteOriginal->codigo_generacion,
+                "fechaEmision" => $dteOriginal->fecha_emision->format('Y-m-d')
+            ]
+        ],
+        "emisor" => [
+            "nit" => "032267824",
+            "nrc" => "2193320",
+            "nombre" => "ROBIN ANTONIO CASTILLO SAAVEDRA",
+            "codActividad" => "96092",
+            "descActividad" => "Servicios n.c.p.",
+            "nombreComercial" => "ROBIN ANTONIO CASTILLO SAAVEDRA",
+            "tipoEstablecimiento" => "02",
+            "direccion" => [
+                "departamento" => "02",
+                "municipio" => "01",
+                "complemento" => "9 avenida Sur entre 1 y 3 calle"
+            ],
+            "telefono" => "71902000",
+            "correo" => "castillorobin11@gmail.com"
+        ],
+        "receptor" => [
+            // Heredamos TODO del JSON original que ya fue aprobado
+            "nit" => $originalData['receptor']['nit'] ?? null,
+            "nrc" => $originalData['receptor']['nrc'] ?? null,
+            "nombre" => $originalData['receptor']['nombre'] ?? null,
+            "nombreComercial" => $originalData['receptor']['nombreComercial'] ?? null,
+            "codActividad" => $originalData['receptor']['codActividad'] ?? null,
+            "descActividad" => $originalData['receptor']['descActividad'] ?? null,
+            "direccion" => [
+                "departamento" => $originalData['receptor']['direccion']['departamento'] ?? null,
+                "municipio" => $originalData['receptor']['direccion']['municipio'] ?? null,
+                "complemento" => $originalData['receptor']['direccion']['complemento'] ?? null
+            ],
+            "telefono" => $originalData['receptor']['telefono'] ?? null,
+            "correo" => $originalData['receptor']['correo'] ?? null
+        ],
+        "ventaTercero" => null, // Campo Requerido
+        "cuerpoDocumento" => array_map(function($item) use ($dteOriginal) {
+    return [
+        "numItem"    => $item['numItem'],
+        "tipoItem"   => $item['tipoItem'],
+        
+        // ASIGNACIÓN CRÍTICA: Hacienda exige el UUID del CCF original aquí
+        "numeroDocumento" => $dteOriginal->codigo_generacion, 
+        
+        "cantidad"   => $item['cantidad'],
+        "codigo"     => $item['codigo'],
+        "codTributo" => null,
+        "uniMedida"  => 59,
+        "descripcion" => $item['descripcion'],
+        "precioUni"  => $item['precioUni'],
+        "montoDescu" => 0,
+        "ventaNoSuj" => 0,
+        "ventaExenta" => 0,
+        "ventaGravada" => $item['ventaGravada'],
+        "tributos"   => ["20"]
+    ];
+        }, $items),
+        "resumen" => [
+            "totalNoSuj" => 0,
+            "totalExenta" => 0,
+            "totalGravada" => $montoGravado,
+            "subTotalVentas" => $montoGravado,
+            "descuNoSuj" => 0,
+            "descuExenta" => 0,
+            "descuGravada" => 0,
+            "totalDescu" => 0,
+            "subTotal" => $montoGravado,
+            "ivaRete1" => 0,
+            "ivaPerci1" => 0,
+            "reteRenta" => 0,
+            "montoTotalOperacion" => $totalNota,
+            "totalLetras" => $this->numeroALetras($totalNota),
+            "condicionOperacion" => 2,
+            "tributos" => [
+                [
+                    "codigo" => "20",
+                    "descripcion" => "Impuesto al Valor Agregado 13%",
+                    "valor" => $iva
+                ]
+            ]
+        ],
+        "extension" => null, // Campo Requerido
+        "apendice" => null   // Campo Requerido
     ];
 }
 

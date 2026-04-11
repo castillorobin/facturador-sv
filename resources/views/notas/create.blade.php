@@ -1,94 +1,122 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Generar Nota de Crédito para CCF: <span class="text-indigo-600">{{ $dteOriginal->numero_control }}</span>
+            Nota de Crédito Manual para: <span class="text-indigo-600">{{ $dteOriginal->numero_control }}</span>
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <form action="{{ route('notas.store') }}" method="POST">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+
+         
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 font-bold shadow-sm">
+                    {{ session('success') }}
+                </div>
+            @endif 
+
+            @if ($errors->any())
+                <div class="mt-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                    <ul class="list-disc ms-4">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form action="{{ route('notas.store') }}" method="POST" class="bg-white shadow-lg rounded-lg overflow-hidden">
                 @csrf
                 <input type="hidden" name="dte_origen_id" value="{{ $dteOriginal->id }}">
+                <input type="hidden" name="modalidad" value="manual">
 
-                <div class="bg-gray-100 p-6 rounded-t-lg border-b border-gray-300 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-4 text-white flex justify-between items-center">
                     <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">Cliente Receptor</p>
-                        <p class="text-sm font-bold">{{ $dteOriginal->customer->nombre }}</p>
-                        <p class="text-xs text-gray-400">NIT/NRC: {{ $dteOriginal->customer->nit }}</p>
+                        <p class="text-xs uppercase opacity-70">Cliente</p>
+                        <p class="font-bold">{{ $dteOriginal->customer->nombre }}</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">Código Generación Original</p>
-                        <p class="text-xs font-mono">{{ $dteOriginal->codigo_generacion }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase">Total Original</p>
-                        <p class="text-lg font-black text-indigo-700">$ {{ number_format($dteOriginal->total_pagar, 2) }}</p>
+                    <div class="text-right">
+                        <p class="text-xs uppercase opacity-70">Monto Máximo (CCF)</p>
+                        <p class="font-bold text-xl">$ {{ number_format($dteOriginal->total_pagar, 2) }}</p>
+                        <input type="hidden" id="limite_maximo" value="{{ $dteOriginal->total_pagar }}">
                     </div>
                 </div>
 
-                <div class="bg-white p-6 border-b border-gray-200">
-                    <label class="block text-sm font-medium text-gray-700">Motivo de la Nota de Crédito (Hacienda lo requiere)</label>
-                    <select name="tipo_nota" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500">
-                        <option value="1">Devolución de mercadería</option>
-                        <option value="2">Descuento concedido</option>
-                        <option value="3">Error en precio/cálculo</option>
-                    </select>
-                    <textarea name="motivo_detalle" rows="2" class="mt-2 block w-full border-gray-300 rounded-md" placeholder="Explique brevemente el motivo..."></textarea>
-                </div>
+                <div class="p-6 space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 uppercase">Motivo del Ajuste</label>
+                        <select name="motivo_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500">
+                            <option value="2">Descuento concedido</option>
+                            <option value="3">Anulación parcial por ajuste de precio</option>
+                            <option value="4">Anulación parcial por error en el producto</option>
+                            <option value="5">Anulación parcial por error en la cantidad</option>
+                        </select>
+                        <textarea name="motivo_detalle" rows="2" required class="mt-2 block w-full border-gray-300 rounded-md" placeholder="Describa el ajuste (ej: Descuento comercial por pronto pago)"></textarea>
+                    </div>
 
-                <div class="bg-white overflow-hidden shadow-sm p-6">
-                    <h3 class="text-md font-bold mb-4 text-gray-700">Productos del CCF Original</h3>
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50 uppercase text-xs">
-                            <tr>
-                                <th class="px-4 py-2">¿Aplicar?</th>
-                                <th class="px-4 py-2">Producto</th>
-                                <th class="px-4 py-2 text-center">Cant. Original</th>
-                                <th class="px-4 py-2 text-center">Cant. a Devolver</th>
-                                <th class="px-4 py-2 text-right">Precio Unit.</th>
-                                <th class="px-4 py-2 text-right">Subtotal Rebaja</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($dteOriginal->details as $index => $item)
-                            <tr class="border-b">
-                                <td class="px-4 py-2 text-center">
-                                    <input type="checkbox" name="items[{{$index}}][selected]" value="1" class="rounded text-indigo-600 focus:ring-indigo-500">
-                                    <input type="hidden" name="items[{{$index}}][product_id]" value="{{ $item->product_id }}">
-                                </td>
-                                <td class="px-4 py-2 font-medium">
-                                    {{ $item->product->descripcion ?? 'Producto no encontrado o eliminado' }}
-                                </td>
-                                <td class="px-4 py-2 text-center text-gray-400">{{ $item->cantidad }}</td>
-                                <td class="px-4 py-2">
-                                    <input type="number" name="items[{{$index}}][cantidad]" max="{{ $item->cantidad }}" min="1" step="0.01" 
-                                           value="{{ $item->cantidad }}"
-                                           class="w-20 rounded border-gray-300 text-center text-xs p-1">
-                                </td>
-                                <td class="px-4 py-2 text-right">$ {{ number_format($item->precio_unitario, 2) }}</td>
-                                <td class="px-4 py-2 text-right font-bold text-red-600">
-                                    $ <span class="row-total">0.00</span>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                    <hr>
 
-                <div class="bg-gray-50 p-6 rounded-b-lg flex justify-between items-center border-t border-gray-200">
-                    <div class="text-right w-full">
-                        <p class="text-sm text-gray-600 font-bold uppercase">Total Rebaja (IVA Incluido):</p>
-                        <h2 class="text-3xl font-black text-red-600">$ <span id="gran-total-nota">0.00</span></h2>
-                        <div class="mt-4 flex justify-end space-x-3">
-                            <a href="{{ route('dtes.index') }}" class="bg-gray-300 px-4 py-2 rounded-md font-bold text-xs uppercase">Cancelar</a>
-                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md font-bold text-xs uppercase shadow-lg hover:bg-indigo-700">
-                                Generar Nota de Crédito en Hacienda
-                            </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                            <label class="block text-sm font-bold text-indigo-900">Monto de la Rebaja (Sin IVA)</label>
+                            <div class="relative mt-1">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                                <input type="number" name="monto_ajuste" id="monto_ajuste" step="0.01" required
+                                       class="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 text-lg font-bold">
+                            </div>
+                            <p class="text-[10px] text-indigo-600 mt-1 italic">* El sistema sumará el 13% automáticamente.</p>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Subtotal:</span>
+                                <span id="resumen_subtotal">$ 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm mb-1 text-gray-600">
+                                <span>IVA (13%):</span>
+                                <span id="resumen_iva">$ 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-black border-t pt-2 text-red-600">
+                                <span>TOTAL NOTA:</span>
+                                <span id="resumen_total">$ 0.00</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="bg-gray-100 p-4 flex justify-end space-x-3">
+                    <a href="{{ route('dtes.index') }}" class="px-4 py-2 text-gray-600 font-bold uppercase text-xs">Cancelar</a>
+                    <button type="submit" id="btn_enviar" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md font-bold uppercase text-xs shadow-md transition">
+                        Emitir Nota de Crédito
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        document.getElementById('monto_ajuste').addEventListener('input', function(e) {
+            const montoSinIva = parseFloat(e.target.value) || 0;
+            const limiteMax = parseFloat(document.getElementById('limite_maximo').value);
+            
+            const iva = montoSinIva * 0.13;
+            const total = montoSinIva + iva;
+
+            // Actualizar resumen visual
+            document.getElementById('resumen_subtotal').innerText = '$ ' + montoSinIva.toFixed(2);
+            document.getElementById('resumen_iva').innerText = '$ ' + iva.toFixed(2);
+            document.getElementById('resumen_total').innerText = '$ ' + total.toFixed(2);
+
+            // Validar que no exceda el CCF original
+            const btn = document.getElementById('btn_enviar');
+            if (total > (limiteMax + 0.01)) { // Margen por decimales
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                alert("El total de la Nota de Crédito no puede ser mayor al CCF original.");
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    </script>
+
 </x-app-layout>
