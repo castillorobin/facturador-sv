@@ -42,6 +42,24 @@
                 </div>
             @endif
 
+
+            @if(auth()->user()->company->modo_contingencia)
+    <div class="alert alert-danger d-flex justify-content-between align-items-center">
+        <div>
+            <strong>MODO CONTINGENCIA ACTIVO:</strong> Todos los DTE se generarán para transmisión posterior.
+        </div>
+        <form action="{{ route('contingencia.desactivar') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-light">Desactivar Modo Normal</button>
+        </form>
+    </div>
+@else
+    <form action="{{ route('contingencia.activar') }}" method="POST" class="mb-3">
+        @csrf
+        <button type="submit" class="btn btn-danger">Activar Modo Contingencia</button>
+    </form>
+@endif
+
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg border border-gray-200">
                 <div class="bg-indigo-50 p-4 rounded-lg mb-6 border border-indigo-100 shadow-sm">
     <form method="GET" action="{{ route('dtes.index') }}" id="filterForm" class="flex flex-wrap items-end gap-4">
@@ -96,7 +114,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @forelse($dtes as $dte)
+                        @foreach($dtes as $dte)
                             <tr class="bg-white hover:bg-indigo-50 transition-colors duration-200">
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex flex-col items-center">
@@ -124,6 +142,10 @@
                                     @elseif($dte->tipo_dte == '05')
                                         <span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-[10px] font-black uppercase">
                                             Nota de Crédito
+                                        </span>
+                                    @elseif($dte->tipo_dte == '14')
+                                        <span class="px-2 py-1 rounded bg-rose-100 text-rose-700 text-[10px] font-black uppercase">
+                                            Sujeto Excluido
                                         </span>
                                     @else
                                         <span class="px-2 py-1 rounded bg-gray-200 text-gray-700 text-[10px] font-black uppercase">
@@ -212,11 +234,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">No hay registros.</td>
-                            </tr>
-                        @endforelse
+                    @endforeach
                     </tbody>
                 </table>
             </div>
@@ -287,6 +305,9 @@
                         "language": {
                             "url": "https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json"
                         },
+                        "columnDefs": [
+                            { "orderable": false, "targets": 5 } // Desactiva el orden en la columna de Acciones
+                        ],
                         "pageLength": 10,
                         "dom": '<"flex justify-between mb-4"lf>rt<"flex justify-between mt-4"ip>'
                     });

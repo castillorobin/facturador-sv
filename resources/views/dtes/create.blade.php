@@ -39,6 +39,7 @@
                                     <select name="tipo_dte" id="tipo_dte" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                         <option value="01">01 - Consumidor Final</option>
                                         <option value="03">03 - Comprobante de Crédito Fiscal</option>
+                                        <option value="14">14 - Factura de Sujeto Excluido</option>
                                     </select>
                                 </div>
                             </div>

@@ -41,6 +41,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/notas/create', [NotaCreditoController::class, 'create'])->name('notas.create');
     Route::post('/notas/store', [NotaCreditoController::class, 'store'])->name('notas.store');
     Route::delete('/dtes/{id}', [DteController::class, 'destroy'])->name('dtes.destroy');
+    Route::post('/settings/toggle-contingencia', [DteController::class, 'toggleContingencia'])->name('settings.contingencia');
+
+    // Ruta para MOSTRAR el formulario (la que cargaste ahorita)
+Route::get('/contingencia/notificar', function () {
+    return view('contingencia.evento');
+})->name('contingencia.view_notificar');
+
+// Ruta para PROCESAR el envío (la que el formulario busca en el botón Enviar)
+Route::post('/contingencia/notificar', [App\Http\Controllers\DteController::class, 'notificarEvento'])
+    ->name('contingencia.notificar');
+
+
+    Route::post('/contingencia/transmitir', [App\Http\Controllers\DteController::class, 'transmitirPendientes'])
+    ->name('contingencia.transmitir');
+
+
+
+
+
+
+   
 });
 
 require __DIR__.'/auth.php';

@@ -153,7 +153,10 @@ class DteController extends Controller
     if ($dte->tipo_dte === '03') {
         $dteJson = $dteService->generarEstructura03($dte);
         $version = 3;
-    } else {
+    } elseif ($dte->tipo_dte === '14') { 
+        $dteJson = $dteService->generarEstructura14($dte);
+        $version = 1;
+    }else {
         $dteJson = $dteService->generarEstructura01($dte);
         $version = 1;
     }
@@ -429,29 +432,28 @@ class DteController extends Controller
                 }
 
                 public function destroy($id)
-                    {
-                        $dte = Dte::findOrFail($id);
+                {
+                    $dte = Dte::findOrFail($id);
 
-                        // SEGURIDAD: Solo permitir borrar si no ha sido enviado a Hacienda
-                        if ($dte->estado !== 'BORRADOR') {
-                            return back()->withErrors('No se puede eliminar un DTE que ya ha sido procesado o anulado ante Hacienda.');
-                        }
-
-                        try {
-                            DB::beginTransaction();
-                            
-                            // 1. Borrar los ítems primero (por la relación de base de datos)
-                            $dte->items()->delete(); 
-                            
-                            // 2. Borrar la cabecera
-                            $dte->delete();
-
-                            DB::commit();
-
-                            return redirect()->route('dtes.index')->with('success', 'Borrador eliminado correctamente. El número de control ha sido liberado.');
-                        } catch (\Exception $e) {
-                            DB::rollBack();
-                            return back()->withErrors('Error al eliminar el borrador: ' . $e->getMessage());
-                        }
+                    // Solo permitimos borrar si es BORRADOR para no perder rastro de lo enviado a Hacienda
+                    if ($dte->estado !== 'BORRADOR') {
+                        return back()->withErrors('No se puede eliminar un DTE que ya fue procesado.');
                     }
+
+                    try {
+                        DB::beginTransaction();
+                        
+                        // Borramos los detalles primero
+                        $dte->items()->delete(); 
+                        // Borramos la cabecera
+                        $dte->delete();
+
+                        DB::commit();
+
+                        return redirect()->route('dtes.index')->with('success', 'Borrador eliminado. El número de control está libre para usarse de nuevo.');
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        return back()->withErrors('Error al eliminar: ' . $e->getMessage());
+                    }
+                }
 }

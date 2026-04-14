@@ -544,5 +544,135 @@ public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalN
     ];
 }
 
+public function generarEstructura14(Dte $dte)
+{
+  $dte->load(['customer', 'details', 'company']);
+
+    // 1. Limpieza inicial del documento
+    $docRaw = $dte->customer->num_documento;
+    $soloNumeros = preg_replace('/[^0-9]/', '', $docRaw);
+    $longitud = strlen($soloNumeros);
+
+    // 2. Determinar el tipo según el estándar del DTE 14
+    // 13 = DUI (9 dígitos)
+    // 36 = NIT (14 dígitos)
+    // 02 = Carnet de Resident (Si fuera el caso)
+    
+    if ($longitud >= 10) {
+        $tipoDocHacienda = "36";
+        $documentoExcluido = str_pad($soloNumeros, 14, '0', STR_PAD_LEFT);
+    } else {
+        $tipoDocHacienda = "13";
+        $documentoExcluido = str_pad($soloNumeros, 9, '0', STR_PAD_LEFT);
+    }
+  
+    // --- 1. LÓGICA DE CÁLCULOS (Esto es lo que faltaba) ---
+    $cuerpoDocumento = [];
+    $totalCompra = 0;
+
+    foreach ($dte->details as $index => $item) {
+        $montoItem = round($item->precio_unitario * $item->cantidad, 2);
+        $totalCompra += $montoItem;
+
+        $cuerpoDocumento[] = [
+            "numItem" => $index + 1,
+            "tipoItem" => 1, 
+            "cantidad" => $item->cantidad,
+            "codigo" => null,
+            "uniMedida" => 59, 
+            "descripcion" => $item->descripcion,
+            "precioUni" => round($item->precio_unitario, 2),
+            "montoDescu" => 0,
+            "compra" => $montoItem
+        ];
+    }
+
+    $rentaRetenida = round($totalCompra * 0.10, 2);
+    $totalPagar = round($totalCompra - $rentaRetenida, 2);
+    // -------------------------------------------------------
+
+    // Limpiamos el documento del sujeto excluido (solo números)
+   // $documentoExcluido = preg_replace('/[^0-9]/', '', $dte->customer->num_documento);
+//dd($documentoExcluido, $tipoDocHacienda);
+    return [
+        "identificacion" => [
+            "version" => 1,
+            "ambiente" => "00",
+            "tipoDte" => "14",
+            "numeroControl" => $dte->numero_control,
+            "codigoGeneracion" => $dte->codigo_generacion,
+            "tipoModelo" => 1,
+            "tipoOperacion" => 1,
+            "fecEmi" => $dte->fecha_emision->format('Y-m-d'),
+            "horEmi" => $dte->fecha_emision->format('H:i:s'),
+            "tipoMoneda" => "USD",
+            "tipoContingencia" => null,
+            "motivoContin" => null
+        ],
+        "emisor" => [
+            "nit" => preg_replace('/[^0-9]/', '', $dte->company->nit),
+            "nrc" => preg_replace('/[^0-9]/', '', $dte->company->nrc),
+            "nombre" => $dte->company->nombre,
+            "codActividad" => $dte->company->cod_actividad ?? "96092",
+            "descActividad" => $dte->company->desc_actividad ?? "Servicios n.c.p.",
+            "direccion" => [
+                "departamento" => $dte->company->departamento ?? "02",
+                "municipio" => $dte->company->municipio ?? "01",
+                "complemento" => substr($dte->company->direccion ?? "Dirección del emisor", 0, 250)
+            ],
+            "telefono" => $dte->company->telefono,
+            "correo" => $dte->company->email,
+            "codEstableMH" => null,
+            "codEstable" => "0001",
+            "codPuntoVentaMH" => null,
+            "codPuntoVenta" => "0001"
+        ],
+        "sujetoExcluido" => [
+             
+            "tipoDocumento" => $tipoDocHacienda,
+            "numDocumento" => $documentoExcluido,
+            "nombre" => $dte->customer->nombre,
+            "codActividad" => $dte->customer->cod_actividad ?? "41001",
+            "descActividad" => $dte->customer->desc_actividad ?? "Varios",
+            "direccion" => [
+                "departamento" => $dte->customer->departamento ?? "02",
+                "municipio" => $dte->customer->municipio ?? "01",
+                "complemento" => substr($dte->customer->direccion ?? "Dirección conocida", 0, 250)
+            ],
+            "telefono" => $dte->customer->telefono ?? "22222222",
+            "correo" => $dte->customer->email
+            
+        ],
+       
+        "cuerpoDocumento" => $cuerpoDocumento,
+        "resumen" => [
+            "totalCompra" => round($totalCompra, 2),
+            "descu" => 0,
+            "totalDescu" => 0,
+            "subTotal" => round($totalCompra, 2),
+            "ivaRete1" => 0,
+            "reteRenta" => $rentaRetenida,
+            "totalPagar" => $totalPagar,
+            "totalLetras" => $this->numeroALetras($totalPagar),
+            "condicionOperacion" => 1,
+            "pagos" => [
+                [
+                    "codigo" => "01",
+                    "montoPago" => $totalPagar,
+                    "referencia" => null,
+                    "periodo" => null,
+                    "plazo" => null
+                ]
+            ],
+            "observaciones" => null
+        ],
+        "apendice" => null
+    ];
+
+    
+}
+
+
+
 
 }
