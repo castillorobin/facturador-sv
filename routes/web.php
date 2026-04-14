@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DteController;
 use App\Http\Controllers\DteExportController;
 use App\Http\Controllers\NotaCreditoController;
+use App\Http\Controllers\ContingenciaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -41,7 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/notas/create', [NotaCreditoController::class, 'create'])->name('notas.create');
     Route::post('/notas/store', [NotaCreditoController::class, 'store'])->name('notas.store');
     Route::delete('/dtes/{id}', [DteController::class, 'destroy'])->name('dtes.destroy');
-    Route::post('/settings/toggle-contingencia', [DteController::class, 'toggleContingencia'])->name('settings.contingencia');
+    
 
     // Ruta para MOSTRAR el formulario (la que cargaste ahorita)
 Route::get('/contingencia/notificar', function () {
@@ -52,11 +53,11 @@ Route::get('/contingencia/notificar', function () {
 Route::post('/contingencia/notificar', [App\Http\Controllers\DteController::class, 'notificarEvento'])
     ->name('contingencia.notificar');
 
-
-    Route::post('/contingencia/transmitir', [App\Http\Controllers\DteController::class, 'transmitirPendientes'])
-    ->name('contingencia.transmitir');
-
-
+    
+    // Rutas para las acciones individuales
+    Route::post('/dtes/{id}/reportar', [DteController::class, 'reportarIndividual'])->name('dtes.reportar');
+    Route::post('/dtes/{id}/enviar-contingencia', [DteController::class, 'enviarIndividual'])->name('dtes.enviar');
+    Route::post('/settings/contingencia', [ContingenciaController::class, 'toggleModo'])->name('settings.contingencia');
 
 
 

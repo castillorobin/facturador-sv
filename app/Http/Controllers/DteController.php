@@ -75,7 +75,7 @@ class DteController extends Controller
                             $request->tipo_dte . "-" . 
                             $establecimiento . $puntoVenta . "-" . 
                             str_pad($correlativoNumero, 15, '0', STR_PAD_LEFT);
-
+            $company = auth()->user()->company;
             // 3. Crear la Cabecera del DTE
             $dte = Dte::create([
                 'company_id' => auth()->user()->company_id, // Multitenant
@@ -85,7 +85,8 @@ class DteController extends Controller
                 'codigo_generacion' => strtoupper(Str::uuid()), // UUID v4 en mayúsculas
                 'numero_control' => $numeroControl,
                 'fecha_emision' => Carbon::now(),
-                'estado' => 'BORRADOR',
+                'tipo_modelo' => $company->modo_contingencia ? 2 : 1,
+                'estado' => $company->modo_contingencia ? 'CONTINGENCIA' : 'BORRADOR',
                 'total_pagar' => 0, // Lo calcularemos sumando los ítems
             ]);
 
@@ -455,5 +456,67 @@ class DteController extends Controller
                         DB::rollBack();
                         return back()->withErrors('Error al eliminar: ' . $e->getMessage());
                     }
+                }
+
+                public function reportarIndividual($id, DteService $dteService)
+                {
+                    $dte = Dte::findOrFail($id);
+                    
+                    // 1. Generamos el JSON de Aviso (Estructura V3)
+                    $avisoJson = $dteService->generarEstructuraContingenciaIndividual($dte);
+
+                    $payload = [
+                        'Usuario' => "032267824",
+                        'Password' => "Alexan24.",
+                        'Ambiente' => '00',
+                        'DteJson' => json_encode($avisoJson),
+                        'Nit' => "05152308851012",
+                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                    ];
+
+                    $response = Http::post('http://163.245.212.103:7122/api/contingencia', $payload);
+                    $data = $response->json();
+
+                    if (isset($data['selloRecibido'])) {
+                        $dte->update([
+                            'sello_contingencia' => $data['selloRecibido'],
+                            'estado' => 'REPORTADO'
+                        ]);
+                        return back()->with('success', 'Documento reportado con éxito.');
+                    }
+
+                    return back()->withErrors('Error MH: ' . json_encode($data));
+                }
+
+                public function enviarIndividual($id, DteService $dteService)
+                {
+                    $dte = Dte::findOrFail($id);
+
+                    $payload = [
+                        'Usuario' => "032267824",
+                        'Password' => "Alexan24.",
+                        'Ambiente' => '00',
+                        'Nit' => "05152308851012",
+                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                        'DteJson' => json_encode($dteService->generarEstructura01($dte)),
+                        'TipoDte' => (string)$dte->tipo_dte,
+                        'CodigoGeneracion' => (string)$dte->codigo_generacion,
+                        'NumControl' => (string)$dte->numero_control,
+                        'VersionDte' => ($dte->tipo_dte == '01' ? 1 : 3),
+                    ];
+
+                    $response = Http::post('http://163.245.212.103:7122/api/procesar-dte', $payload);
+                    $data = $response->json();
+
+                    if (isset($data['selloRecibido'])) {
+                        $dte->update([
+                            'estado' => 'PROCESADO',
+                            'sello_recepcion' => $data['selloRecibido'],
+                            'fecha_procesamiento' => now()
+                        ]);
+                        return back()->with('success', 'DTE procesado y enviado correctamente.');
+                    }
+
+                    return back()->withErrors('Error al enviar factura: ' . json_encode($data));
                 }
 }

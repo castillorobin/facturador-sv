@@ -42,23 +42,10 @@
                 </div>
             @endif
 
+           
 
-            @if(auth()->user()->company->modo_contingencia)
-    <div class="alert alert-danger d-flex justify-content-between align-items-center">
-        <div>
-            <strong>MODO CONTINGENCIA ACTIVO:</strong> Todos los DTE se generarán para transmisión posterior.
-        </div>
-        <form action="{{ route('contingencia.desactivar') }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-sm btn-light">Desactivar Modo Normal</button>
-        </form>
-    </div>
-@else
-    <form action="{{ route('contingencia.activar') }}" method="POST" class="mb-3">
-        @csrf
-        <button type="submit" class="btn btn-danger">Activar Modo Contingencia</button>
-    </form>
-@endif
+           
+
 
             <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg border border-gray-200">
                 <div class="bg-indigo-50 p-4 rounded-lg mb-6 border border-indigo-100 shadow-sm">
@@ -163,6 +150,7 @@
                                         $config = [
                                             'BORRADOR'  => ['bg' => '#f3f4f6', 'text' => '#4b5563', 'border' => '#d1d5db'],
                                             'PROCESADO' => ['bg' => '#dcfce7', 'text' => '#15803d', 'border' => '#86efac'],
+                                            'CONTINGENCIA' => ['bg' => '#fef3c7', 'text' => '#92400e', 'border' => '#fdba74'],
                                             'RECHAZADO' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fca5a5'],
                                             'ANULADO'   => ['bg' => '#ffedd5', 'text' => '#c2410c', 'border' => '#fdba74'],
                                         ];
@@ -175,6 +163,38 @@
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                   @if($dte->estado == 'CONTINGENCIA')
+                                        <div class="flex items-center gap-2"> {{-- Contenedor Flex para alinear horizontalmente --}}
+                                            
+                                            <form action="{{ route('dtes.reportar', $dte->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition"
+                                                        style="background-color: #0d6efd !important; color: #ffffff !important; border: 1px solid #0a58ca !important;">
+                                                    Reportar MH
+                                                </button>
+                                            </form>
+
+                                            <button type="button" 
+                                                    onclick="confirmarEliminacion({{ $dte->id }}, '{{ $dte->numero_control }}')"
+                                                    title="Eliminar Borrador"
+                                                    class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition hover:opacity-90"
+                                                    style="background-color: #dc3545 !important; color: #ffffff !important; border: 1px solid #b02a37 !important;">
+                                                BORRAR
+                                            </button>
+
+                                        </div> {{-- Fin del contenedor flex --}}
+
+                                    @elseif($dte->estado == 'REPORTADO')
+                                        <form action="{{ route('dtes.enviar', $dte->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button class="inline-flex items-center px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-tighter shadow-sm transition"
+                                                            style="background-color: #0d6efd !important; color: #ffffff !important; border: 1px solid #0a58ca !important;">Enviar a Hacienda</button>
+                                        </form>
+
+                                    
+                                    @endif
+
+
                                     <div class="flex items-center justify-center space-x-3">
                                        @if(strtoupper($dte->estado) == 'BORRADOR')
                                             <div class="flex items-center space-x-2">
@@ -238,10 +258,29 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        
+   
+ <div class="mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border {{ auth()->user()->company->modo_contingencia ? 'border-red-500 bg-red-50' : 'border-gray-200' }}" style="margin-top: 30px;">
+    <div>
+        <h2 class="text-sm font-bold uppercase {{ auth()->user()->company->modo_contingencia ? 'text-red-700' : 'text-gray-700' }}">
+            Estado del Sistema: {{ auth()->user()->company->modo_contingencia ? '⚠️ MODO CONTINGENCIA ACTIVO' : '✅ Transmisión en Línea' }}
+        </h2>
+        <p class="text-xs text-gray-500">
+            {{ auth()->user()->company->modo_contingencia ? 'Los DTEs se guardarán localmente para transmisión posterior.' : 'Los DTEs se enviarán a Hacienda inmediatamente.' }}
+        </p>
     </div>
-
     
+    <form action="{{ route('settings.contingencia') }}" method="POST">
+        @csrf
+        <button type="submit" 
+                class="px-4 py-2 rounded-md font-bold text-xs uppercase transition-all {{ auth()->user()->company->modo_contingencia ? 'bg-gray-600 text-white' : 'bg-red-600 text-white' }}">
+            {{ auth()->user()->company->modo_contingencia ? 'Detener Contingencia' : 'Activar Contingencia' }}
+        </button>
+    </form>
+</div>
+
+</div>
+ </div>
     <script>
     function confirmarAnulacion(id, numControl) {
         Swal.fire({

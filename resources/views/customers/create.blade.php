@@ -71,48 +71,49 @@
 
                 <hr class="my-8 pt-4">
 
-                <header>
-                    <h2 class="text-lg font-medium text-gray-900">Ubicación y Contacto</h2>
-                </header>
+<header>
+    <h2 class="text-lg font-medium text-gray-900">Ubicación y Contacto</h2>
+</header>
 
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <x-input-label for="departamento" value="Departamento" />
-                        <select name="departamento" id="departamento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            <option value="">-- Seleccione --</option>
-                            @foreach($departamentos as $depto)
-                                <option value="{{ $depto->codigo }}">{{ $depto->valor }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+        <x-input-label for="departamento" value="Departamento" />
+        <select name="departamento" id="departamento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">-- Seleccione --</option>
+            @foreach($departamentos as $depto)
+                <option value="{{ $depto->codigo }}">{{ $depto->valor }}</option>
+            @endforeach
+        </select>
+    </div>
 
-                    <div class="mt-4">
-                       <x-input-label for="municipio" value="Municipio" />
-                        <select name="municipio" id="municipio" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                            <option value="">-- Seleccione Municipio --</option>
-                            @foreach($municipios as $muni)
-                                <option value="{{ $muni->codigo }}" {{ old('municipio') == $muni->codigo ? 'selected' : '' }}>
-                                    {{ $muni->valor }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <x-input-error class="mt-2" :messages="$errors->get('municipio')" />
+    <div>
+        <x-input-label for="municipio" value="Municipio" />
+        <select name="municipio" id="municipio" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+            <option value="">-- Seleccione Municipio --</option>
+            @foreach($municipios as $muni)
+                <option value="{{ $muni->codigo }}" {{ old('municipio') == $muni->codigo ? 'selected' : '' }}>
+                    {{ $muni->valor }}
+                </option>
+            @endforeach
+        </select>
+        <x-input-error class="mt-2" :messages="$errors->get('municipio')" />
+    </div>
 
-                    <div class="md:col-span-2">
-                        <x-input-label for="direccion_complemento" value="Dirección Completa" />
-                        <x-text-input name="direccion_complemento" type="text" class="mt-1 block w-full" :value="old('direccion_complemento')" />
-                    </div>
+    <div class="md:col-span-2">
+        <x-input-label for="direccion_complemento" value="Dirección Completa" />
+        <x-text-input name="direccion_complemento" type="text" class="mt-1 block w-full" :value="old('direccion_complemento')" />
+    </div>
 
-                    <div>
-                        <x-input-label for="telefono" value="Teléfono" />
-                        <x-text-input name="telefono" type="text" class="mt-1 block w-full" :value="old('telefono')" />
-                    </div>
+    <div>
+        <x-input-label for="telefono" value="Teléfono" />
+        <x-text-input name="telefono" type="text" class="mt-1 block w-full" :value="old('telefono')" />
+    </div>
 
-                    <div>
-                        <x-input-label for="email" value="Correo Electrónico (Para envío de DTE)" />
-                        <x-text-input name="email" type="email" class="mt-1 block w-full" :value="old('email')" />
-                    </div>
-                </div>
+    <div>
+        <x-input-label for="email" value="Correo Electrónico (Para envío de DTE)" />
+        <x-text-input name="email" type="email" class="mt-1 block w-full" :value="old('email')" />
+    </div>
+</div>
 <br>
                 <div class="flex items-center gap-4 mt-8">
                     <x-primary-button>{{ __('Guardar Cliente') }}</x-primary-button>

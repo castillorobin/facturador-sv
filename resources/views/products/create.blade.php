@@ -42,10 +42,11 @@
                         <x-input-label for="unidad_medida" value="Unidad de Medida" />
                         <select name="unidad_medida" id="unidad_medida" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="59">59 - Unidad</option>
-                            <option value="01">01 - Kilogramo</option>
-                            <option value="11">11 - Litro</option>
-                            <option value="18">18 - Servicio Profesional</option>
-                            <option value="22">22 - Hora</option>
+                            <option value="34">34 - Kilogramo</option>
+                            <option value="23">23 - Litro</option>
+                            <option value="36">36 - Libra</option>
+
+
                         </select>
                         <p class="mt-1 text-xs text-gray-500 italic">El código 59 es el estándar para productos individuales.</p>
                     </div>

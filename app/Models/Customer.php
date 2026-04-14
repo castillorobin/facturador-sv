@@ -2,6 +2,9 @@
 
 namespace App\Models;
 use App\Traits\Multitenant;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,6 +27,12 @@ class Customer extends Model
         'telefono', 
         'email'
     ];
+
+       public function dtes(): HasMany
+    {
+        return $this->hasMany(Dte::class);
+    }
+
 
     public function company()
     {

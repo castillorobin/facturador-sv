@@ -6,7 +6,11 @@ use App\Models\Customer;
 use App\Models\Departamento;
 use App\Models\Municipio;
 use App\Models\Actividad;
+use App\Models\Company;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Dte;
 use Illuminate\Http\Request;
+
 
 
 class CustomerController extends Controller
@@ -26,7 +30,7 @@ class CustomerController extends Controller
  
         return view('customers.create', compact('departamentos', 'actividades', 'municipios'));
     }
-
+ 
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -47,5 +51,55 @@ class CustomerController extends Controller
         Customer::create($data);
 
         return redirect()->route('customers.index')->with('success', 'Cliente creado exitosamente.');
+    }
+
+    public function edit(Customer $customer)
+{
+    $departamentos = Departamento::orderBy('valor')->get();
+    $actividades = Actividad::orderBy('descripcion')->get();
+    
+    // FILTRAR: Solo traer municipios que pertenecen al departamento del cliente
+    // Asumiendo que en tu tabla 'municipios' tienes una columna 'departamento_codigo' o similar
+    $municipios = Municipio::where('departamento_codigo', $customer->departamento)->get();
+
+    return view('customers.edit', compact('customer', 'actividades', 'departamentos', 'municipios'));
+}
+
+    public function update(Request $request, Customer $customer)
+    {
+        if ($customer->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'tipo_documento' => 'required|in:36,37', // 36=NIT, 37=DUI
+            'num_documento' => 'required|string|max:20',
+            'email' => 'nullable|email',
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:500',
+        ]);
+
+        $customer->update($request->all());
+
+        return redirect()->route('customers.index')
+            ->with('success', 'Cliente actualizado correctamente.');
+    }
+
+    public function destroy(Customer $customer)
+    {
+        if ($customer->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        // Opcional: Validar si tiene DTEs asociados antes de borrar
+        if ($customer->dtes()->count() > 0) {
+            return back()->with('error', 'No se puede eliminar un cliente que tiene facturas asociadas.');
+        }
+
+        $customer->delete();
+
+        return redirect()->route('customers.index')
+            ->with('success', 'Cliente eliminado con éxito.');
     }
 }

@@ -672,7 +672,47 @@ public function generarEstructura14(Dte $dte)
     
 }
 
+public function generarEstructuraContingenciaIndividual($dte)
+{
+    $company = $dte->company;
 
+    return [
+        "identificacion" => [
+            "version" => 3,
+            "ambiente" => "00",
+            "codigoGeneracion" => strtoupper((string) \Illuminate\Support\Str::uuid()),
+            "fTransmision" => now()->format('Y-m-d'),
+            "hTransmision" => now()->format('H:i:s'),
+        ],
+        "emisor" => [
+            "nit" => preg_replace('/[^0-9]/', '', $company->nit),
+            "nombre" => $company->nombre,
+            "nombreResponsable" => $company->nombre_responsable ?? $company->nombre,
+            "tipoDocResponsable" => "36", // NIT o según corresponda
+            "numeroDocResponsable" => preg_replace('/[^0-9]/', '', $company->nit),
+            "tipoEstablecimiento" => "02",
+            "codEstableMH" => null,
+            "codPuntoVenta" => null,
+            "telefono" => $company->telefono,
+            "correo" => $company->email,
+        ],
+        "detalleDTE" => [
+            [
+                "noItem" => 1,
+                "codigoGeneracion" => (string)$dte->codigo_generacion,
+                "tipoDoc" => (string)$dte->tipo_dte
+            ]
+        ],
+        "motivo" => [
+            "fInicio" => $dte->fecha_emision->format('Y-m-d'),
+            "fFin" => $dte->fecha_emision->format('Y-m-d'),
+            "hInicio" => $dte->fecha_emision->subMinutes(5)->format('H:i:s'),
+            "hFin" => $dte->fecha_emision->format('H:i:s'),
+            "tipoContingencia" => 1, // 1: No disponibilidad de red (el más común)
+            "motivoContingencia" => "Falla de conexión a internet en el establecimiento"
+        ]
+    ];
+}
 
 
 }

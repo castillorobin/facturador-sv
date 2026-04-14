@@ -19,7 +19,11 @@
                             {{ session('success') }}
                         </div>
                     @endif
-
+@if(session('error'))
+    <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+        {{ session('error') }}
+    </div>
+@endif
                     <div class="overflow-x-auto shadow-lg sm:rounded-lg border border-gray-200">
     <table class="w-full text-sm text-gray-500">
         <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b border-gray-300">
@@ -67,20 +71,28 @@
             </td>
 
             <td class="px-6 py-4 text-center">
-                <div class="flex justify-center items-center space-x-4">
-                    <a href="{{ route('customers.edit', $customer) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold flex items-center transition-transform hover:scale-105">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        Editar
-                    </a>
-                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="text-red-600 hover:text-red-900 font-semibold flex items-center transition-transform hover:scale-105" onclick="return confirm('¿Eliminar cliente?')">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            Borrar
-                        </button>
-                    </form>
-                </div>
-            </td>
+    <div class="flex justify-center items-center space-x-4">
+        {{-- Botón Editar --}}
+        <a href="{{ route('customers.edit', $customer) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold flex items-center transition-transform hover:scale-105">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            Editar
+        </a>
+
+        {{-- Botón Borrar --}}
+        <button type="button" 
+                class="text-red-600 hover:text-red-900 font-semibold flex items-center transition-transform hover:scale-105" 
+                onclick="confirmDelete('{{ $customer->id }}')">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            Borrar
+        </button>
+
+        {{-- Formulario Oculto --}}
+        <form id="delete-form-{{ $customer->id }}" action="{{ route('customers.destroy', $customer) }}" method="POST" class="hidden">
+            @csrf 
+            @method('DELETE')
+        </form>
+    </div>
+</td>
         </tr>
     @empty
         ...
@@ -92,4 +104,24 @@
             </div>
         </div>
     </div>
+
+
+    <script>
+        function confirmDelete(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5', // Indigo-600
+        cancelButtonColor: '#ef4444', // Red-600
+        confirmButtonText: 'Sí, borrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    })
+}
+    </script>
 </x-app-layout>
