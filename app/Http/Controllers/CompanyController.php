@@ -24,7 +24,7 @@ class CompanyController extends Controller
     // Obtenemos los municipios del departamento que ya tiene la empresa (opcional para carga inicial)
     $municipios = Municipio::orderBy('valor')->get();
 
-
+ 
 
         return view('company.edit', compact('company', 'departamentos', 'actividades', 'municipios'));
     }
@@ -36,7 +36,7 @@ class CompanyController extends Controller
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'nombre_comercial' => 'required|string|max:255',
-            'nit' => 'required|string|size:14',
+            'nit' => 'required|string',
             'nrc' => 'required|string|max:10',
             'cod_actividad' => 'required|string|max:5',
             'desc_actividad' => 'required|string',

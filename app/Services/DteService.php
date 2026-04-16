@@ -48,14 +48,14 @@ class DteService
                 "nit" => $dte->company->nit,
                 "nrc" => $dte->company->nrc,
                 "nombre" => $dte->company->nombre,
-                "codActividad" => "96092",
-                "descActividad" => "Servicios n.c.p.",
+                "codActividad" => $dte->company->cod_actividad,
+                "descActividad" => $dte->company->desc_actividad,
                 "nombreComercial" => $dte->company->nombre_comercial,
                 "tipoEstablecimiento" => "02",
                 "direccion" => [
-                    "departamento" => "02",
-                    "municipio" => "01",
-                    "complemento" => $dte->company->direccion ?: "Direccion de Establecimiento" 
+                    "departamento" => $dte->company->departamento,
+                    "municipio" => $dte->company->municipio,
+                    "complemento" => $dte->company->direccion_complemento
                 ],
                 "telefono" => $dte->company->telefono,
                 "correo" => $dte->company->email,
@@ -72,9 +72,9 @@ class DteService
                 "codActividad" => "41001",
                 "descActividad" => "Otros",
                 "direccion" => [
-                    "departamento" => "02",
-                    "municipio" => "15",
-                    "complemento" => $dte->customer->direccion ?: "San Salvador"
+                    "departamento" => $dte->customer->departamento,
+                    "municipio" =>  $dte->customer->municipio,
+                    "complemento" => $dte->customer->direccion_complemento
                 ],
                 "telefono" => $dte->customer->telefono,
                 "correo" => $dte->customer->email,
@@ -429,7 +429,7 @@ public function generarNumeroControl($tipoDte)
            $establecimiento . $puntoVenta . "-" . 
            str_pad($correlativoNumero, 15, '0', STR_PAD_LEFT);
 }
-
+ 
 public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalNota)
 {
     // 1. Intentar cargar el JSON original para heredar los datos exactos del receptor
@@ -462,20 +462,20 @@ public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalN
             ]
         ],
         "emisor" => [
-            "nit" => "032267824",
-            "nrc" => "2193320",
-            "nombre" => "ROBIN ANTONIO CASTILLO SAAVEDRA",
-            "codActividad" => "96092",
-            "descActividad" => "Servicios n.c.p.",
-            "nombreComercial" => "ROBIN ANTONIO CASTILLO SAAVEDRA",
+            "nit" => $dteOriginal->company->nit,
+            "nrc" => $dteOriginal->company->nrc,
+            "nombre" => $dteOriginal->company->nombre,
+            "codActividad" => $dteOriginal->company->cod_actividad,
+            "descActividad" => $dteOriginal->company->desc_actividad,
+            "nombreComercial" => $dteOriginal->company->nombre_comercial,
             "tipoEstablecimiento" => "02",
             "direccion" => [
-                "departamento" => "02",
-                "municipio" => "01",
-                "complemento" => "9 avenida Sur entre 1 y 3 calle"
+                "departamento" => $dteOriginal->company->departamento,
+                "municipio" => $dteOriginal->company->municipio,
+                "complemento" => $dteOriginal->company->direccion_complemento
             ],
-            "telefono" => "71902000",
-            "correo" => "castillorobin11@gmail.com"
+            "telefono" => $dteOriginal->company->telefono,
+            "correo" => $dteOriginal->company->correo
         ],
         "receptor" => [
             // Heredamos TODO del JSON original que ya fue aprobado
@@ -618,7 +618,7 @@ public function generarEstructura14(Dte $dte)
             "direccion" => [
                 "departamento" => $dte->company->departamento ?? "02",
                 "municipio" => $dte->company->municipio ?? "01",
-                "complemento" => substr($dte->company->direccion ?? "Dirección del emisor", 0, 250)
+                "complemento" => substr($dte->company->direccion_complemento ?? "Dirección del emisor", 0, 250)
             ],
             "telefono" => $dte->company->telefono,
             "correo" => $dte->company->email,
@@ -637,7 +637,7 @@ public function generarEstructura14(Dte $dte)
             "direccion" => [
                 "departamento" => $dte->customer->departamento ?? "02",
                 "municipio" => $dte->customer->municipio ?? "01",
-                "complemento" => substr($dte->customer->direccion ?? "Dirección conocida", 0, 250)
+                "complemento" => substr($dte->customer->direccion_complemento ?? "Dirección conocida", 0, 250)
             ],
             "telefono" => $dte->customer->telefono ?? "22222222",
             "correo" => $dte->customer->email

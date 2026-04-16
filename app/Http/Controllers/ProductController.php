@@ -36,4 +36,52 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Producto creado correctamente.');
     }
+
+    public function edit(Product $product)
+    {
+        if ($product->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+        return view('products.edit', compact('product'));
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        if ($product->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'precio_unitario' => 'required|numeric|min:0',
+            'unidad_medida' => 'required|string',
+            'codigo_interno' => 'nullable|string|max:50',
+        ]);
+
+        // Manejo del checkbox de exento
+        $data = $request->all();
+        $data['es_exento'] = $request->has('es_exento');
+
+        $product->update($data);
+
+        return redirect()->route('products.index')
+            ->with('success', 'Producto actualizado correctamente.');
+    }
+
+    public function destroy(Product $product)
+    {
+        if ($product->company_id !== auth()->user()->company_id) {
+            abort(403);
+        }
+
+        // Opcional: Evitar borrar si ya está en facturas (DTEs)
+        // if ($product->dteItems()->count() > 0) { 
+        //    return back()->with('error', 'No se puede eliminar un producto con historial de ventas.');
+        // }
+
+        $product->delete();
+
+        return redirect()->route('products.index')
+            ->with('success', 'Producto eliminado del catálogo.');
+    }
 }

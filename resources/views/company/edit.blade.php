@@ -7,6 +7,17 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+        @if ($errors->any())
+                    <div class="mt-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                        <ul class="list-disc ms-4">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
             
             <form method="post" action="{{ route('company.update') }}" class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 @csrf
@@ -122,7 +133,7 @@
                     <div>
                         <x-input-label for="ambiente" value="Ambiente" />
                         <select name="ambiente" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            <option value="00" {{ $company->ambiente == '00' ? 'selected' : '' }}>Pruebas (Sandbox)</option>
+                            <option value="00" {{ $company->ambiente == '00' ? 'selected' : '' }}>Pruebas</option>
                             <option value="01" {{ $company->ambiente == '01' ? 'selected' : '' }}>Producción</option>
                         </select>
                     </div>
@@ -138,16 +149,7 @@
                     </div>
                 </div>
 
-                @if ($errors->any())
-                    <div class="mt-6 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                        <ul class="list-disc ms-4">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
+                
                 <div class="flex items-center gap-4 mt-8">
                     <x-primary-button>{{ __('Guardar Cambios') }}</x-primary-button>
                 </div>

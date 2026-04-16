@@ -71,15 +71,15 @@ public function store(Request $request, DteService $dteService)
             'estado' => 'BORRADOR',
             'dte_origen_id' => $dteOriginal->id, // Para saber a qué CCF afecta
         ]);
-
+$company = $dteOriginal->company;
         // 3. Preparar Payload para la API
         $payload = [
-            'Usuario' => "032267824",
-            'Password' => "Alexan24.",
-            'Ambiente' => '00',
+            'Usuario' => $company->api_usuario,
+            'Password' => $company->api_password,
+            'Ambiente' => $company->ambiente,
             'DteJson' => json_encode($jsonNota),
-            'Nit' => "05152308851012",
-            'PasswordPrivado' => 'Pw6r$LbMw93',
+            'Nit' => $company->nit,
+            'PasswordPrivado' => $company->password_privado,
             'TipoDte' => '05',
             'CodigoGeneracion' => $nuevaNota->codigo_generacion,
             'NumControl' => $nuevaNota->numero_control,

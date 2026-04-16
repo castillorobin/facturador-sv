@@ -10,13 +10,52 @@ use App\Http\Controllers\DteExportController;
 use App\Http\Controllers\NotaCreditoController;
 use App\Http\Controllers\ContingenciaController;
 
+use App\Models\Dte;
+
+
 Route::get('/', function () {
-    return view('welcome');
-}); 
+    return redirect()->route('login');
+});
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $company_id = auth()->user()->company_id;
+    $mesActual = now()->month;
+    $anioActual = now()->year;
+
+    // 1. Total de Ventas del mes actual (Solo facturas procesadas con éxito)
+    $totalVentasMes = Dte::where('company_id', $company_id)
+        ->whereMonth('fecha_emision', $mesActual)
+        ->whereYear('fecha_emision', $anioActual)
+        ->where('estado', 'PROCESADO')
+        ->sum('total_pagar');
+
+    // 2. Conteo de documentos emitidos en el mes
+    $conteoDtesMes = Dte::where('company_id', $company_id)
+        ->whereMonth('fecha_emision', $mesActual)
+        ->whereYear('fecha_emision', $anioActual)
+        ->count();
+
+    // 3. Alertas de Contingencia (DTEs que necesitan atención)
+    $pendientesContingencia = Dte::where('company_id', $company_id)
+        ->whereIn('estado', ['CONTINGENCIA', 'REPORTADO'])
+        ->count();
+
+    // 4. Los últimos 5 DTEs para la tabla de actividad
+    $ultimosDtes = Dte::where('company_id', $company_id)
+        ->with('customer') // Eager loading para evitar el problema N+1
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('dashboard', compact(
+        'totalVentasMes', 
+        'conteoDtesMes', 
+        'pendientesContingencia', 
+        'ultimosDtes'
+    ));
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

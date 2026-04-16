@@ -23,7 +23,7 @@ class RegisteredUserController extends Controller
     {
         return view('auth.register');
     }
-
+ 
     /**
      * Handle an incoming registration request.
      *
@@ -39,7 +39,7 @@ class RegisteredUserController extends Controller
 
     // 1. Creamos una empresa básica para este nuevo suscriptor
     $company = Company::create([
-        'nombre' => 'Mi Empresa - ' . $request->name,
+        'nombre' => $request->name,
         'nombre_comercial' => 'Nombre Comercial',
         'nit' => '00000000000000', // Datos temporales
         'nrc' => '000000',

@@ -4,6 +4,24 @@
             {{ __('Generar Nuevo DTE (Facturación Electrónica)') }}
         </h2>
     </x-slot>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+    .select2-container .select2-selection--single {
+        height: 42px !important;
+        border-color: rgb(209 213 219) !important;
+        border-radius: 0.375rem !important;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 42px !important;
+        color: #374151 !important;
+    }
+</style>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -125,6 +143,8 @@
     </div>
 
     @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
     $(document).ready(function() {
         let items = [];
@@ -236,6 +256,31 @@
     }
 });
     });
+
+    $(document).ready(function() {
+    // Inicializar Select2 en Cliente
+    $('#customer_id').select2({
+        placeholder: "Escriba nombre o documento del cliente...",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Inicializar Select2 en Buscador de Productos
+    $('#product_search').select2({
+        placeholder: "Escriba el nombre del producto...",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Tu lógica existente de agregar productos se mantiene igual, 
+    // pero al limpiar el buscador debemos usar .trigger('change') para Select2
+    $('#btn-add-product').on('click', function() {
+        // ... (tu lógica existente) ...
+        
+        // Al final, para limpiar el buscador con Select2:
+        $('#product_search').val(null).trigger('change');
+    });
+});
 </script>
 @endpush
   

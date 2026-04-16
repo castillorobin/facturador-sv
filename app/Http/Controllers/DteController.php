@@ -148,7 +148,8 @@ class DteController extends Controller
 
     public function enviarAHacienda($id, DteService $dteService)
 {
-    $dte = Dte::findOrFail($id);
+    $dte = Dte::with('company', 'customer')->findOrFail($id);
+    $company = $dte->company;
     
     // Selección dinámica de estructura y versión
     if ($dte->tipo_dte === '03') {
@@ -160,20 +161,20 @@ class DteController extends Controller
     }else {
         $dteJson = $dteService->generarEstructura01($dte);
         $version = 1;
-    }
-
+    } 
+ 
     $payload = [
-        'Usuario' => "032267824",
-        'Password' => "Alexan24.",
-        'Ambiente' => '00',
-        'DteJson' => json_encode($dteJson),
-        'Nit' => "05152308851012",
-        'PasswordPrivado' => 'Pw6r$LbMw93',
-        'TipoDte' => $dte->tipo_dte,
+        'Usuario'          => (string) $company->api_usuario,   // Antes estático: 032267824
+        'Password'         => (string) $company->api_password,  // Antes estático: Alexan24.
+        'Ambiente'         => (string) $company->ambiente,      // '00' para Pruebas, '01' para Producción
+        'DteJson'          => json_encode($dteJson),
+        'Nit'              => (string) $company->nit,                       // Antes estático: 05152308851012
+        'PasswordPrivado'  => (string) $company->password_privado, // Antes estático: Pw6r$LbMw93
+        'TipoDte'          => $dte->tipo_dte,
         'CodigoGeneracion' => $dte->codigo_generacion,
-        'NumControl' => $dte->numero_control,
-        'VersionDte' => $version,
-        'CorreoCliente' => $dte->customer->email
+        'NumControl'       => $dte->numero_control,
+        'VersionDte'       => $version,
+        'CorreoCliente'    => $dte->customer->email 
     ];
 
     try {
@@ -337,20 +338,22 @@ class DteController extends Controller
                         return back()->withErrors('El tiempo límite para invalidar este DTE ha expirado.');
                     }
 
+                    $company = $dte->company;
+
                     $payloadInvalida = $dteService->generarEstructuraInvalidacion(
                         $dte, 
                         $request->motivo, 
-                        "ROBIN CASTILLO", // O el usuario autenticado
+                        "Robin Castillo", // O el usuario autenticado
                         "032267824"
                     );
 
                     $datosParaAPI = [
-                        'Usuario' => "032267824",
-                        'Password' => "Alexan24.",
-                        'Ambiente' => '00',
+                        'Usuario' => $company->api_usuario, // O el usuario autenticado
+                        'Password' => $company->api_password,
+                        'Ambiente' => $company->ambiente,
                         'DteJson' => json_encode($payloadInvalida),
-                        'Nit' => "05152308851012",
-                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                        'Nit' => $company->nit,
+                        'PasswordPrivado' => $company->password_privado,
                         'TipoDte' => '99', // El código para Invalidación es 99 en algunas APIs
                         'CodigoGeneracion' => $payloadInvalida['identificacion']['codigoGeneracion']
                     ];
@@ -383,14 +386,15 @@ class DteController extends Controller
                     // 1. Generamos el JSON de Invalidación (Estructura Tipo 01 de Invalidación)
                     $jsonInvalidacion = $dteService->generarEstructuraInvalidacion($dte, $request->input('motivo'));
 
+                    $company = $dte->company;
                     // 2. Ajustamos el Payload según lo que la API espera para "Procesar"
                     $payload = [
-                        'Usuario' => "032267824",
-                        'Password' => "Alexan24.",
-                        'Ambiente' => '00',
+                        'Usuario' => $company->api_usuario,
+                        'Password' => $company->api_password,
+                        'Ambiente' => $company->ambiente,
                         'DteJson' => json_encode($jsonInvalidacion),
-                        'Nit' => "05152308851012",
-                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                        'Nit' => $company->nit,
+                        'PasswordPrivado' => $company->password_privado,
                         'TipoDte' => '99', // <--- Asegúrate que tu API reconozca 99 como "Invalidación"
                         'CodigoGeneracion' => $jsonInvalidacion['identificacion']['codigoGeneracion'], // El nuevo UUID
                         'NumControl' => null, // La invalidación no lleva número de control propio
