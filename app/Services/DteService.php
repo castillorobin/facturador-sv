@@ -462,20 +462,20 @@ public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalN
             ]
         ],
         "emisor" => [
-            "nit" => $dteOriginal->company->nit,
-            "nrc" => $dteOriginal->company->nrc,
-            "nombre" => $dteOriginal->company->nombre,
-            "codActividad" => $dteOriginal->company->cod_actividad,
-            "descActividad" => $dteOriginal->company->desc_actividad,
-            "nombreComercial" => $dteOriginal->company->nombre_comercial,
+            "nit" => $originalData['emisor']['nit'] ?? null,
+            "nrc" => $originalData['emisor']['nrc'] ?? null,
+            "nombre" => $originalData['emisor']['nombre'] ?? null,
+            "codActividad" => $originalData['emisor']['codActividad'] ?? null,
+            "descActividad" => $originalData['emisor']['descActividad'] ?? null,
+            "nombreComercial" => $originalData['emisor']['nombreComercial'] ?? null,
             "tipoEstablecimiento" => "02",
             "direccion" => [
-                "departamento" => $dteOriginal->company->departamento,
-                "municipio" => $dteOriginal->company->municipio,
-                "complemento" => $dteOriginal->company->direccion_complemento
+                "departamento" => $originalData['emisor']['direccion']['departamento'] ?? null,
+                "municipio" => $originalData['emisor']['direccion']['municipio'] ?? null,
+                "complemento" => $originalData['emisor']['direccion']['complemento'] ?? null
             ],
-            "telefono" => $dteOriginal->company->telefono,
-            "correo" => $dteOriginal->company->correo
+            "telefono" => $originalData['emisor']['telefono'] ?? null,
+            "correo" => $originalData['emisor']['correo'] ?? null
         ],
         "receptor" => [
             // Heredamos TODO del JSON original que ya fue aprobado
