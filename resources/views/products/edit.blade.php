@@ -49,10 +49,7 @@
                         </select>
                     </div>
 
-                    <div class="flex items-center space-x-3 mt-4">
-                        <input type="checkbox" id="es_exento" name="es_exento" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('es_exento', $product->es_exento) ? 'checked' : '' }}>
-                        <x-input-label for="es_exento" value="Este producto es EXENTO de IVA" class="inline-block" />
-                    </div>
+                    
                 </div>
 
                 <div class="flex items-center justify-end gap-4 mt-8 border-t pt-6">
