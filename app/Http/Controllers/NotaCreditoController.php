@@ -88,7 +88,7 @@ $company = $dteOriginal->company;
         ];
 
         // 4. Enviar a la API
-        $response = Http::timeout(60)->post('http://163.245.212.103:7122/api/procesar-dte', $payload);
+        $response = Http::timeout(60)->post('http://18.207.95.69:7122/api/procesar-dte', $payload);
 
         if ($response->successful()) {
             $respuestaAPI = $response->object();

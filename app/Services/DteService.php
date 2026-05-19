@@ -31,7 +31,7 @@ class DteService
             
             "identificacion" => [
                 "version" => 1,
-                "ambiente" => "00",
+                "ambiente" => $dte->company->ambiente,
                 "tipoDte" => "01",
                 "numeroControl" => $dte->numero_control,
                 "codigoGeneracion" => $dte->codigo_generacion,
@@ -195,7 +195,7 @@ class DteService
     return [
         "identificacion" => [
             "version" => 3,
-            "ambiente" => "00",
+            "ambiente" => $dte->company->ambiente,
             "tipoDte" => "03",
             "numeroControl" => $dte->numero_control,
             "codigoGeneracion" => $dte->codigo_generacion,
@@ -328,7 +328,7 @@ class DteService
     return [
         "identificacion" => [
             "version" => 2,
-            "ambiente" => "00",
+            "ambiente" => $dte->company->ambiente,
             "codigoGeneracion" => strtoupper(\Illuminate\Support\Str::uuid()->toString()), // UUID nuevo para la anulación
             "fecAnula" => now()->format('Y-m-d'),
             "horAnula" => now()->format('H:i:s'),
@@ -441,7 +441,7 @@ public function generarEstructuraNotaCreditoManual($dteOriginal, $items, $totalN
     return [
         "identificacion" => [
             "version" => 3,
-            "ambiente" => "00",
+            "ambiente" => $dte->company->ambiente,
             "tipoDte" => "05",
             "numeroControl" => $this->generarNumeroControl("05"),
             "codigoGeneracion" => strtoupper((string) \Illuminate\Support\Str::uuid()),
@@ -597,7 +597,7 @@ public function generarEstructura14(Dte $dte)
     return [
         "identificacion" => [
             "version" => 1,
-            "ambiente" => "00",
+            "ambiente" => $dte->company->ambiente,
             "tipoDte" => "14",
             "numeroControl" => $dte->numero_control,
             "codigoGeneracion" => $dte->codigo_generacion,
@@ -679,7 +679,7 @@ public function generarEstructuraContingenciaIndividual($dte)
     return [
         "identificacion" => [
             "version" => 3,
-            "ambiente" => "00",
+            "ambiente" => $dte->company->ambiente,
             "codigoGeneracion" => strtoupper((string) \Illuminate\Support\Str::uuid()),
             "fTransmision" => now()->format('Y-m-d'),
             "hTransmision" => now()->format('H:i:s'),

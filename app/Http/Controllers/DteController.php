@@ -179,7 +179,7 @@ class DteController extends Controller
 
     try {
         // Usamos el cliente HTTP de Laravel (más limpio que cURL)
-        $response = Http::timeout(30)->post('http://163.245.212.103:7122/api/procesar-dte', $payload);
+        $response = Http::timeout(30)->post('http://18.207.95.69:7122/api/procesar-dte', $payload);
 
         if ($response->successful()) {
             $respuestaAPI = $response->object(); // Usamos object para acceder como $respuestaAPI->campo
@@ -275,7 +275,7 @@ class DteController extends Controller
             ];
 
             try {
-                $response = Http::timeout(60)->post('http://163.245.212.103:7122/api/generar-pdf', $payload);
+                $response = Http::timeout(60)->post('http://18.207.95.69:7122/api/generar-pdf', $payload);
 
                 if ($response->successful()) {
                     return response($response->body(), 200)
@@ -316,7 +316,7 @@ class DteController extends Controller
                 ];
 
                 try {
-                    $response = Http::timeout(60)->post('http://163.245.212.103:7122/api/enviar-correo', $payload);
+                    $response = Http::timeout(60)->post('http://18.207.95.69:7122/api/enviar-correo', $payload);
 
                     if ($response->successful()) {
                         return back()->with('success', '¡Correo reenviado exitosamente al cliente!');
@@ -359,7 +359,7 @@ class DteController extends Controller
                     ];
 
                     try {
-                        $response = Http::post('http://163.245.212.103:7122/api/anular-dte', $datosParaAPI);
+                        $response = Http::post('http://18.207.95.69:7122/api/anular-dte', $datosParaAPI);
 
                         if ($response->successful()) {
                             $res = $response->json();
@@ -404,7 +404,7 @@ class DteController extends Controller
 
                     try {
                         // Usamos post directo con el array
-                        $response = Http::timeout(60)->post('http://163.245.212.103:7122/api/anular-dte', $payload);
+                        $response = Http::timeout(60)->post('http://18.207.95.69:7122/api/anular-dte', $payload);
 
                         if ($response->successful()) {
                             $data = $response->json();
@@ -470,15 +470,15 @@ class DteController extends Controller
                     $avisoJson = $dteService->generarEstructuraContingenciaIndividual($dte);
 
                     $payload = [
-                        'Usuario' => "032267824",
-                        'Password' => "Alexan24.",
-                        'Ambiente' => '00',
+                        'Usuario' => $dte->company->api_usuario,
+                        'Password' => $dte->company->api_password,
+                        'Ambiente' => $dte->company->ambiente,
                         'DteJson' => json_encode($avisoJson),
-                        'Nit' => "05152308851012",
-                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                        'Nit' => $dte->company->nit,
+                        'PasswordPrivado' => $dte->company->password_privado,
                     ];
 
-                    $response = Http::post('http://163.245.212.103:7122/api/contingencia', $payload);
+                    $response = Http::post('http://18.207.95.69:7122/api/contingencia', $payload);
                     $data = $response->json();
 
                     if (isset($data['selloRecibido'])) {
@@ -497,11 +497,11 @@ class DteController extends Controller
                     $dte = Dte::findOrFail($id);
 
                     $payload = [
-                        'Usuario' => "032267824",
-                        'Password' => "Alexan24.",
-                        'Ambiente' => '00',
-                        'Nit' => "05152308851012",
-                        'PasswordPrivado' => 'Pw6r$LbMw93',
+                        'Usuario' => $dte->company->api_usuario,
+                        'Password' => $dte->company->api_password,
+                        'Ambiente' => $dte->company->ambiente,
+                        'Nit' => $dte->company->nit,
+                        'PasswordPrivado' => $dte->company->password_privado,
                         'DteJson' => json_encode($dteService->generarEstructura01($dte)),
                         'TipoDte' => (string)$dte->tipo_dte,
                         'CodigoGeneracion' => (string)$dte->codigo_generacion,
@@ -509,7 +509,7 @@ class DteController extends Controller
                         'VersionDte' => ($dte->tipo_dte == '01' ? 1 : 3),
                     ];
 
-                    $response = Http::post('http://163.245.212.103:7122/api/procesar-dte', $payload);
+                    $response = Http::post('http://18.207.95.69:7122/api/procesar-dte', $payload);
                     $data = $response->json();
 
                     if (isset($data['selloRecibido'])) {
