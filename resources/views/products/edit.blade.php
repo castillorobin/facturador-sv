@@ -46,6 +46,7 @@
                             <option value="34" {{ $product->unidad_medida == '34' ? 'selected' : '' }}>34 - Kilogramo</option>
                             <option value="23" {{ $product->unidad_medida == '23' ? 'selected' : '' }}>23 - Litro</option>
                             <option value="36" {{ $product->unidad_medida == '36' ? 'selected' : '' }}>36 - Libra</option>
+                            <option value="22" {{ $product->unidad_medida == '22' ? 'selected' : '' }}>22 - Galón</option>
                         </select>
                     </div>
 
