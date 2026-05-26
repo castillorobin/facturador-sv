@@ -55,6 +55,15 @@
                         <x-input-label for="nombre_comercial" value="Nombre Comercial" />
                         <x-text-input name="nombre_comercial" type="text" class="mt-1 block w-full" :value="old('nombre_comercial')" />
                     </div>
+                    <div>
+                        <x-input-label for="tipo" value="Tipo de Contribuyente" />
+                        <select name="tipo" id="tipo" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <option value="">-- Seleccione --</option>
+                            <option value="peque">Pequeño Contribuyente</option>
+                            <option value="mediano">Mediano Contribuyente</option>
+                            <option value="grande">Gran Contribuyente</option>
+                        </select>
+                    </div>
 
                     <div class="md:col-span-2">
                         <x-input-label for="select-actividad" value="Actividad Económica" />

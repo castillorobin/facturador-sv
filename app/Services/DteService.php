@@ -184,13 +184,29 @@ class DteService
     $cuerpoDocumento = $this->mapearItemsCCF($dte->items);
     
     $totalGravada = 0;
+     $totalGravadaCalculada = 0;
+$totalIvaCalculado = 0;
     foreach ($cuerpoDocumento as $item) {
         $totalGravada += $item['ventaGravada'];
-    }
+        //$totalGravadaCalculada += $item['ventaGravada'];
+    //$totalIvaCalculado += $item['ivaItem'];
+    } 
+
+    // --- LÓGICA DE RETENCIÓN 1% ---
+$ivaRete1 = 0.00;
+
+if ($dte->customer->tipo == 'grande' && $totalGravada >= 100.00) {
+    // 1% sobre la base gravada (antes de IVA)
+    $ivaRete1 = round($totalGravada * 0.01, 2);
+}
+   
+
 
     $totalGravada = round($totalGravada, 2);
     $totalIVA = round($totalGravada * 0.13, 2);
-    $totalPagar = round($totalGravada + $totalIVA, 2);
+    //$totalPagar = round($totalGravada + $totalIVA, 2);
+
+    $totalPagar = round(($totalGravada + $totalIVA) - $ivaRete1, 2);
 
     return [
         "identificacion" => [
@@ -257,10 +273,10 @@ class DteService
             "porcentajeDescuento" => 0.0,
             "totalDescu" => 0.0,
             "subTotal" => $totalGravada,
-            "ivaRete1" => 0.0,
+            "ivaRete1" => $ivaRete1,
             "ivaPerci1" => 0.0,
             "reteRenta" => 0.0,
-            "montoTotalOperacion" => $totalPagar,
+            "montoTotalOperacion" => round($totalGravada + $totalIVA, 2),
             "totalNoGravado" => 0.0,
             "totalPagar" => $totalPagar,
             "totalLetras" => $this->numeroALetras($totalPagar),
@@ -287,6 +303,7 @@ class DteService
         "extension" => null, // REQUERIDO
         "apendice" => null   // REQUERIDO
     ];
+    
 }
 
         private function mapearItemsCCF($items)

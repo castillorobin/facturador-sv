@@ -33,6 +33,7 @@ class CustomerController extends Controller
  
     public function store(Request $request)
     {
+       // dd($request->all());
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
             'tipo_documento' => 'required', // 36=NIT, 13=DUI, etc
@@ -46,7 +47,10 @@ class CustomerController extends Controller
             'direccion_complemento' => 'nullable|string',
             'telefono' => 'nullable|string',
             'email' => 'nullable|email',
+            'tipo' => 'nullable|string',
         ]);
+
+
 
         Customer::create($data);
 
@@ -78,6 +82,7 @@ class CustomerController extends Controller
             'email' => 'nullable|email',
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
+            'tipo' => 'nullable|in:peque,mediano,grande',
         ]);
 
         $customer->update($request->all());

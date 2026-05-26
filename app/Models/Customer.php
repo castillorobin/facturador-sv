@@ -25,7 +25,8 @@ class Customer extends Model
         'municipio', 
         'direccion_complemento', 
         'telefono', 
-        'email'
+        'email',
+        'tipo',
     ];
 
        public function dtes(): HasMany
